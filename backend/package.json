@@ -5,8 +5,8 @@
   "scripts": {
     "lint": "eslint 'src/**/*.{ts,js}'",
     "build": "tsc",
-    "start": "node dist/app.js",
-    "dev": "ts-node-dev src/app.ts"
+    "start": "node dist/server.js",
+    "dev": "ts-node-dev src/server.ts"
   },
   "keywords": [],
   "author": "",
