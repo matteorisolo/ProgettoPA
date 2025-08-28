@@ -1,14 +1,37 @@
 // Database models initialization and export
 import Database from '../utils/database';
+import User from './User';
+import Product from './product';
+import Purchase from './purchase';
+import Download from './download';
 
 // Get the singleton Sequelize instance
 const sequelize = Database.getInstance();
 
-// Inserire relazioni tra modelli
+// Define model associations
+// A User can make many Purchases (as buyer)
+User.hasMany(Purchase, { foreignKey: 'buyerId', as: 'purchases' });
+Purchase.belongsTo(User, { foreignKey: 'buyerId', as: 'buyer' });
+
+// A user can receive many Purchases (as recipient, for gifts)
+User.hasMany(Purchase, { foreignKey: 'recipientId', as: 'giftsReceived' });
+Purchase.belongsTo(User, { foreignKey: 'recipientId', as: 'recipient' });
+
+// A product can be purchased many times (bought by many users)
+Product.hasMany(Purchase, { foreignKey: 'assetId', as: 'purchases' });
+Purchase.belongsTo(Product, { foreignKey: 'assetId', as: 'product' });
+
+// A Purchase can have many Downloads (associated download links)
+Purchase.hasMany(Download, { foreignKey: 'purchaseId', as: 'downloads' });
+Download.belongsTo(Purchase, { foreignKey: 'purchaseId', as: 'purchase' });
 
 // Export the database object containing Sequelize instance and models
 const db = {
-    sequelize
+    sequelize,
+    User,
+    Product,
+    Purchase,
+    Download
 };
 
 // Function to initialize and sync all models with the database
@@ -19,4 +42,4 @@ export const initModels = async () => {
 };
 
 // Export the db object
-export default { db };
+export default db;
