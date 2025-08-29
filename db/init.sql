@@ -4,10 +4,10 @@ CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 -- =====================================
 -- Creation of ENUM types
 -- =====================================
-CREATE TYPE role_enum AS ENUM ('admin', 'user');
-CREATE TYPE product_type_enum AS ENUM ('manuscript', 'historical_cartography', 'photograph',
+CREATE TYPE enum_users_role AS ENUM ('admin', 'user');
+CREATE TYPE enum_products_type AS ENUM ('manuscript', 'historical_cartography', 'photograph',
                                     'painting', 'map', 'document', 'newspaper', 'book');
-CREATE TYPE purchase_type_enum AS ENUM ('standard','gift','additional_download');
+CREATE TYPE enum_purchases_type AS ENUM ('standard','gift','additional_download');
 
 -- =====================================
 -- Creation of tables
@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS users (
     last_name VARCHAR(100) NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
-    role role_enum NOT NULL,
+    role enum_users_role NOT NULL,
     tokens FLOAT DEFAULT 20
 );
 
@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS users (
 CREATE TABLE IF NOT EXISTS products (
     id_product SERIAL PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
-    type product_type_enum NOT NULL,
+    type enum_products_type NOT NULL,
     year INT NOT NULL,
     format VARCHAR(10) NOT NULL,       -- jpg, png, mp4
     cost FLOAT NOT NULL,
@@ -36,20 +36,20 @@ CREATE TABLE IF NOT EXISTS products (
 );
 
 -- PURCHASES table
-CREATE TABLE IF NOT EXISTS purchase (
+CREATE TABLE IF NOT EXISTS purchases (
     id_purchase SERIAL PRIMARY KEY,
     buyer_id INT NOT NULL REFERENCES users(id_user),
     recipient_id INT REFERENCES users(id_user),         -- user who receives the gift 
     recipient_email VARCHAR(255),                  -- optional, stored for logging purposes
     product_id INT NOT NULL REFERENCES products(id_product),
-    type purchase_type_enum NOT NULL,
+    type enum_purchases_type NOT NULL,
     created_at TIMESTAMP DEFAULT NOW()
 );
 
 -- DOWNLOADS table
-CREATE TABLE IF NOT EXISTS download (
+CREATE TABLE IF NOT EXISTS downloads (
     id_download SERIAL PRIMARY KEY,
-    purchase_id INT NOT NULL REFERENCES purchase(id_purchase),
+    purchase_id INT NOT NULL REFERENCES purchases(id_purchase),
     download_url UUID NOT NULL DEFAULT gen_random_uuid(), -- secure unique link
     times_used INT DEFAULT 0,
     max_times INT NOT NULL,      -- 1 for normal purchase, 2 for gift
@@ -104,29 +104,29 @@ INSERT INTO products (title, type, year, format, cost, path) VALUES
 
 -- PURCHASES seed
 
-INSERT INTO purchase (buyer_id, product_id, type)
+INSERT INTO purchases (buyer_id, product_id, type)
 VALUES (2, 1, 'standard');
 
-INSERT INTO purchase (buyer_id, product_id, type)
+INSERT INTO purchases (buyer_id, product_id, type)
 VALUES (3, 2, 'standard');
 
-INSERT INTO purchase (buyer_id, recipient_id, recipient_email, product_id, type)
+INSERT INTO purchases (buyer_id, recipient_id, recipient_email, product_id, type)
 VALUES (4, 5, 'paolo.neri@example.com', 4, 'gift');
 
-INSERT INTO purchase (buyer_id, product_id, type)
+INSERT INTO purchases (buyer_id, product_id, type)
 VALUES (2, 1, 'additional_download');
 
 
 -- DOWNLOADS seed
 
-INSERT INTO download (purchase_id, max_times)
+INSERT INTO downloads (purchase_id, max_times)
 VALUES (1, 1);
 
-INSERT INTO download (purchase_id, max_times)
+INSERT INTO downloads (purchase_id, max_times)
 VALUES (2, 1);
 
-INSERT INTO download (purchase_id, max_times)
+INSERT INTO downloads (purchase_id, max_times)
 VALUES (3, 2);
 
-INSERT INTO download (purchase_id, max_times)
+INSERT INTO downloads (purchase_id, max_times)
 VALUES (4, 1);
