@@ -106,10 +106,10 @@
     -- PURCHASES seed
     
     INSERT INTO purchase (buyer_id, asset_id, type)
-    VALUES (2, 1, 'original');
+    VALUES (2, 1, 'standard');
 
     INSERT INTO purchase (buyer_id, asset_id, type)
-    VALUES (3, 2, 'original');
+    VALUES (3, 2, 'standard');
 
     INSERT INTO purchase (buyer_id, recipient_id, recipient_email, asset_id, type)
     VALUES (4, 5, 'paolo.neri@example.com', 4, 'gift');
