@@ -38,10 +38,10 @@
     -- PURCHASES table
     CREATE TABLE IF NOT EXISTS purchase (
         id_purchase SERIAL PRIMARY KEY,
-        buyer_id INT NOT NULL REFERENCES users(id),
-        recipient_id INT REFERENCES users(id),         -- user who receives the gift 
+        buyer_id INT NOT NULL REFERENCES users(id_user),
+        recipient_id INT REFERENCES users(id_user),         -- user who receives the gift 
         recipient_email VARCHAR(255),                  -- optional, stored for logging purposes
-        asset_id INT NOT NULL REFERENCES assets(id),
+        id_product INT NOT NULL REFERENCES products(id_product),
         type purchase_type_enum NOT NULL,
         created_at TIMESTAMP DEFAULT NOW()
     );
@@ -49,7 +49,7 @@
     -- DOWNLOADS table
     CREATE TABLE IF NOT EXISTS download (
         id_download SERIAL PRIMARY KEY,
-        purchase_id INT NOT NULL REFERENCES purchase(id),
+        purchase_id INT NOT NULL REFERENCES purchase(id_purchase),
         download_url UUID NOT NULL DEFAULT gen_random_uuid(), -- secure unique link
         times_used INT DEFAULT 0,
         max_times INT NOT NULL,      -- 1 for normal purchase, 2 for gift
