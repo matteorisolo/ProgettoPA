@@ -41,7 +41,7 @@
         buyer_id INT NOT NULL REFERENCES users(id_user),
         recipient_id INT REFERENCES users(id_user),         -- user who receives the gift 
         recipient_email VARCHAR(255),                  -- optional, stored for logging purposes
-        id_product INT NOT NULL REFERENCES products(id_product),
+        product_id INT NOT NULL REFERENCES products(id_product),
         type purchase_type_enum NOT NULL,
         created_at TIMESTAMP DEFAULT NOW()
     );
@@ -105,16 +105,16 @@
 
     -- PURCHASES seed
     
-    INSERT INTO purchase (buyer_id, asset_id, type)
+    INSERT INTO purchase (buyer_id, product_id, type)
     VALUES (2, 1, 'standard');
 
-    INSERT INTO purchase (buyer_id, asset_id, type)
+    INSERT INTO purchase (buyer_id, product_id, type)
     VALUES (3, 2, 'standard');
 
-    INSERT INTO purchase (buyer_id, recipient_id, recipient_email, asset_id, type)
+    INSERT INTO purchase (buyer_id, recipient_id, recipient_email, product_id, type)
     VALUES (4, 5, 'paolo.neri@example.com', 4, 'gift');
 
-    INSERT INTO purchase (buyer_id, asset_id, type)
+    INSERT INTO purchase (buyer_id, product_id, type)
     VALUES (2, 1, 'additional_download');
 
 
