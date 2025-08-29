@@ -32,6 +32,9 @@ COPY --from=builder /usr/src/app/package*.json ./
 COPY --from=builder /usr/src/app/node_modules ./node_modules
 COPY --from=builder /usr/src/app/dist ./dist
 
+# RICORDARE DI ELIMINARE QUESTA RIGA
+COPY --from=builder /usr/src/app/src ./src
+
 # Expose the application port
 EXPOSE 3000
 

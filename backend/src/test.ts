@@ -11,7 +11,7 @@ import db, { initModels } from './models';
     console.log("✅ Models initialized");
 
     // 3️⃣ Test query minima
-    const user = await db.User.findOne();
+    const user = await db.AppUser.findOne();
     const product = await db.Product.findOne();
     console.log("User:", user?.email);
     console.log("Product:", product?.title);

@@ -1,6 +1,6 @@
 // Database models initialization and export
 import Database from '../utils/database';
-import User from './User';
+import AppUser from './appUser';
 import Product from './product';
 import Purchase from './purchase';
 import Download from './download';
@@ -10,12 +10,12 @@ const sequelize = Database.getInstance();
 
 // Define model associations
 // A User can make many Purchases (as buyer)
-User.hasMany(Purchase, { foreignKey: 'buyerId', as: 'purchases' });
-Purchase.belongsTo(User, { foreignKey: 'buyerId', as: 'buyer' });
+AppUser.hasMany(Purchase, { foreignKey: 'buyerId', as: 'purchases' });
+Purchase.belongsTo(AppUser, { foreignKey: 'buyerId', as: 'buyer' });
 
 // A user can receive many Purchases (as recipient, for gifts)
-User.hasMany(Purchase, { foreignKey: 'recipientId', as: 'giftsReceived' });
-Purchase.belongsTo(User, { foreignKey: 'recipientId', as: 'recipient' });
+AppUser.hasMany(Purchase, { foreignKey: 'recipientId', as: 'giftsReceived' });
+Purchase.belongsTo(AppUser, { foreignKey: 'recipientId', as: 'recipient' });
 
 // A product can be purchased many times (bought by many users)
 Product.hasMany(Purchase, { foreignKey: 'assetId', as: 'purchases' });
@@ -28,7 +28,7 @@ Download.belongsTo(Purchase, { foreignKey: 'purchaseId', as: 'purchase' });
 // Export the database object containing Sequelize instance and models
 const db = {
     sequelize,
-    User,
+    AppUser,
     Product,
     Purchase,
     Download

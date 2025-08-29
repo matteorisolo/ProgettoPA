@@ -20,7 +20,7 @@ export interface IUserAttributes {
 export interface IUserCreationAttributes extends Optional<IUserAttributes, 'idUser' | 'tokens'> {}
 
 // Define the User model class
-class User extends Model<IUserAttributes, IUserCreationAttributes> implements IUserAttributes {
+class AppUser extends Model<IUserAttributes, IUserCreationAttributes> implements IUserAttributes {
     public idUser!: number;
     public firstName!: string;
     public lastName!: string;
@@ -36,7 +36,7 @@ class User extends Model<IUserAttributes, IUserCreationAttributes> implements IU
 }
 
 // Initialize the User sequelize model with its attributes and options
-User.init(
+AppUser.init(
     {
         idUser: {
             type: DataTypes.INTEGER,
@@ -82,4 +82,4 @@ User.init(
 );
 
 // Export the User model
-export default User;
+export default AppUser;
