@@ -11,7 +11,7 @@ export interface IPurchaseAttributes {
     buyerId: number;
     recipientId?: number | null;
     recipientEmail?: string | null;
-    assetId: number;
+    productId: number;
     type: PurchaseType;
     createdAt: Date;
 }
@@ -25,7 +25,7 @@ class Purchase extends Model<IPurchaseAttributes, IPurchaseCreationAttributes> i
     public buyerId!: number;
     public recipientId?: number | null;
     public recipientEmail?: string | null;
-    public assetId!: number;
+    public productId!: number;
     public type!: PurchaseType;
     public createdAt!: Date;
 
@@ -59,10 +59,10 @@ Purchase.init(
             allowNull: true,
             field: 'recipient_email',
         },
-        assetId: {
+        productId: {
             type: DataTypes.INTEGER,
             allowNull: false,
-            field: 'asset_id',
+            field: 'product_id',
         },
         type: {
             type: DataTypes.ENUM(...Object.values(PurchaseType)),
