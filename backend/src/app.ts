@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 import authRoutes from './routes/authRoutes';
 import { HttpErrorFactory } from './utils/errors/HttpErrorFactory';
 import { HttpErrorCodes } from './utils/errors/HttpErrorCodes';
-import { errorHandler } from './middleware/errorHandlerMiddleware';
+import { errorHandler } from './middlewares/errorHandlerMiddleware';
 
 // Environment variables configuration
 dotenv.config();
