@@ -7,7 +7,7 @@ import { HttpErrorCodes } from '../utils/errors/HttpErrorCodes';
 
 // UserDAO interface extending the base DAO interface
 interface IUserDAO extends DAO<IUserAttributes, number> {
-    getByEmail(email: string): Promise<User>;
+    getByEmail(email: string): Promise<User | null>;
 }
 
 // UserDao class implementing IUserDAO
@@ -43,15 +43,9 @@ class UserDao implements IUserDAO {
         }
     }
 
-    public async getByEmail(email: string): Promise<User> {
+    public async getByEmail(email: string): Promise<User | null> {
         try {
             const user = await User.findOne({ where: { email } });
-            if (!user) {
-                throw HttpErrorFactory.createError(
-                    HttpErrorCodes.NotFound,
-                    `User not found with email ${email}.`
-                );
-            }
             return user;
         } catch (error) {
             if (error instanceof HttpError) throw error;

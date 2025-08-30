@@ -21,18 +21,14 @@ export interface AuthLoginResult {
 export class AuthService {
     static async login(email: string, password: string): Promise<AuthLoginResult> {
         // 1) Fetch user by email via DAO
-        let user = await userDao.getByEmail(email);
+         const user = await userDao.getByEmail(email);
 
-        try {
-            user = await userDao.getByEmail(email);
-        } catch (err) {
-            // Se il DAO segnala che l'utente non esiste, mappiamo a 401
-            if (err instanceof HttpError && err.code === HttpErrorCodes.NotFound) {
-                throw HttpErrorFactory.createError(
-                    HttpErrorCodes.Unauthorized,
-                    'Invalid email or password.'
-                );
-            }
+        // In case the DAO version returns `null` instead of throwing for not found.
+        if (!user) {
+            throw HttpErrorFactory.createError(
+                HttpErrorCodes.Unauthorized,
+                'Invalid email or password.'
+            );
         }
 
         // 2) Verify the password using bcrypt (DB must store hashed passwords).
