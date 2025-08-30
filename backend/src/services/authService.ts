@@ -1,8 +1,9 @@
 import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
 import userDao from '../dao/userDao';
 import { generateToken } from "../utils/jwt";
-import { HttpErrorFactory, HttpErrorCodes, HttpError } from '../utils/errorHandler';
+import { HttpErrorFactory } from '../utils/errors/HttpErrorFactory';
+import { HttpErrorCodes } from '../utils/errors/HttpErrorCodes';
+import { HttpError } from '../utils/errors/HttpError';
 import { IUserAttributes } from '../models/appUser';
 
 /**
@@ -20,27 +21,14 @@ export interface AuthLoginResult {
 export class AuthService {
     static async login(email: string, password: string): Promise<AuthLoginResult> {
         // 1) Fetch user by email via DAO
-        let user;
-        try {
-            user = await userDao.getByEmail(email);
-        } catch (err) {
-            if (err instanceof HttpError && err.statusCode === HttpErrorCodes.NotFound) {
-                // Do not reveal whether the email exists; keep a generic message.
-                throw HttpErrorFactory.createError(
-                HttpErrorCodes.Unauthorized,
-                'Invalid email or password.'
-                );
-            }
-            // Propagate unexpected errors (DB/network/etc.)
-            throw err;
-        }
+        const user = await userDao.getByEmail(email);
 
         // In case the DAO version returns `null` instead of throwing for not found.
         if (!user) {
             throw HttpErrorFactory.createError(
                 HttpErrorCodes.Unauthorized,
                 'Invalid email or password.'
-        );
+            );
         }
 
         // 2) Verify the password using bcrypt (DB must store hashed passwords).

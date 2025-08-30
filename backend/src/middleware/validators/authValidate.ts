@@ -1,7 +1,7 @@
 import { body } from "express-validator";
 import validateRequest from "./validateRequestMiddleware";
 
-// Validation middleware for login
+// Validation middleware for login (array of middlewares)
 export const validateLogin = [
     // Check if email is provided and is valid and normalize it
     body('email')

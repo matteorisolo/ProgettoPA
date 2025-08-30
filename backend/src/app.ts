@@ -2,7 +2,8 @@
 import express from 'express';
 import dotenv from 'dotenv';
 import authRoutes from './routes/authRoutes';
-import { HttpErrorCodes, HttpErrorFactory } from './utils/errorHandler';
+import { HttpErrorFactory } from './utils/errors/HttpErrorFactory';
+import { HttpErrorCodes } from './utils/errors/HttpErrorCodes';
 import { errorHandler } from './middleware/errorHandlerMiddleware';
 
 // Environment variables configuration

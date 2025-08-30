@@ -1,5 +1,6 @@
 import jwt, { JwtPayload } from "jsonwebtoken";
-import { HttpErrorCodes, HttpErrorFactory } from "./errorHandler";
+import { HttpErrorFactory } from '../utils/errors/HttpErrorFactory';
+import { HttpErrorCodes } from '../utils/errors/HttpErrorCodes';
 
 // Load jwt secret from environment variables
 const JWT_SECRET = process.env.JWT_SECRET;

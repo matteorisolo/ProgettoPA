@@ -1,7 +1,9 @@
 import { DAO } from './daoInterface';
 import User, { IUserAttributes, IUserCreationAttributes } from '../models/appUser';
 import { Transaction } from 'sequelize';
-import { HttpErrorFactory, HttpErrorCodes, HttpError } from '../utils/errorHandler';
+import { HttpErrorFactory } from '../utils/errors/HttpErrorFactory';
+import { HttpError } from '../utils/errors/HttpError';
+import { HttpErrorCodes } from '../utils/errors/HttpErrorCodes';
 
 // UserDAO interface extending the base DAO interface
 interface IUserDAO extends DAO<IUserAttributes, number> {

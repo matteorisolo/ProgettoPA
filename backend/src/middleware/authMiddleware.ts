@@ -2,7 +2,8 @@ import { Request, Response, NextFunction } from 'express';
 import { UserRole } from '../enums/UserRole';
 import dotenv from 'dotenv';
 import { verifyToken } from '../utils/jwt';
-import { HttpErrorFactory, HttpErrorCodes } from '../utils/errorHandler';
+import { HttpErrorFactory } from '../utils/errors/HttpErrorFactory';
+import { HttpErrorCodes } from '../utils/errors/HttpErrorCodes';
 
 // Load environment variables
 dotenv.config();
