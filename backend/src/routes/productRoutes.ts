@@ -14,8 +14,8 @@ router.post(
     '/products',
     authMiddleware,                 // Middleware to authenticate the user
     authorize([UserRole.ADMIN]),    // Only admins can upload products
-    uploadProduct.single('file'),   // Middleware to handle file upload
-    productValidate,                // Middleware to validate product data               
+    productValidate,                // Middleware to validate product data
+    uploadProduct.single('file'),   // Middleware to handle file upload               
     createProduct                   // Controller to handle product creation
 );
 
