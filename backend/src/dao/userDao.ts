@@ -71,7 +71,7 @@ class UserDao implements IUserDAO {
         try {
             const [rows, updatedUser] = await User.update(user, {
                 where: { idUser: id },
-                returning: true
+                returning: true            // returns the updated rows
             });
             if (rows === 0) {
                 throw HttpErrorFactory.createError(
