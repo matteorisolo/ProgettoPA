@@ -3,7 +3,6 @@ import userDao from '../dao/userDao';
 import { generateToken } from "../utils/jwt";
 import { HttpErrorFactory } from '../utils/errors/HttpErrorFactory';
 import { HttpErrorCodes } from '../utils/errors/HttpErrorCodes';
-import { HttpError } from '../utils/errors/HttpError';
 import { IUserAttributes } from '../models/appUser';
 
 /**

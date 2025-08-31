@@ -8,9 +8,11 @@ export const validateLogin = [
         .notEmpty().withMessage('Email needs to be provided.')
         .isEmail().withMessage('Email not valid.')
         .normalizeEmail(),
+
     // Check if password is provided and has a minimum length of 6 characters
     body('password')
         .notEmpty().withMessage('Password need to be provided.')
         .isLength({ min: 6 }).withMessage('Password must be at least 6 characters long.'),
+        
     validateRequest
 ]
