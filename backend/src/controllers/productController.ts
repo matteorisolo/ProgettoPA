@@ -3,6 +3,7 @@ import { ProductService } from '../services/productService';
 import { HttpErrorFactory } from '../utils/errors/HttpErrorFactory';
 import { HttpErrorCodes } from '../utils/errors/HttpErrorCodes';
 import { IProductCreationAttributes } from '../models/product';
+import { IProductListFilters } from '../services/productService';
 import fs from 'fs';
 import path from 'path';
 
@@ -43,6 +44,39 @@ export const createProduct = async (req: Request, res: Response, next: NextFunct
         return res.status(201).json({
             message: 'Product created successfully',
             product
+        });
+    } 
+    // Pass any errors to the error handling middleware
+    catch (error) {
+        next(error);
+    }
+};
+
+// Controller function to handle retrieving products with optional filters
+export const getProducts = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        // Prepare filters from query parameters (if provided)
+        const filters: IProductListFilters = {
+            type: req.query.type as string,
+            year: req.query.year ? Number(req.query.year) : undefined,
+            format: req.query.format as string,
+        };
+
+        // Get the list of products from the service with the applied filters
+        const products = await ProductService.list(filters);
+
+        // If no products found, return an empty array with a message
+        if (!products || products.length === 0) {
+            return res.status(200).json({
+                message: 'No products found with the given filters.',
+                products: []
+            });
+        }
+
+        // Return success response with the list of products
+        return res.status(200).json({
+            message: 'Products retrieved successfully',
+            products
         });
     } 
     // Pass any errors to the error handling middleware

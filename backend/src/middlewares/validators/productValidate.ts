@@ -1,9 +1,10 @@
 import { body } from "express-validator";
 import validateRequest from "./validateRequestMiddleware";
 import { ProductType } from "../../enums/ProductType";
+import { query } from "express-validator";
 
 // Validation middleware for creating a Product
-export const productValidate = [
+export const createProductValidate = [
     // Title must not be empty
     body('title')
         .notEmpty().withMessage('Title is required.'),
@@ -35,6 +36,30 @@ export const productValidate = [
                 throw new Error('File is required.');
             return true;
         }),
+
+    // Use the centralized request validation middleware to handle any validation errors
+    validateRequest
+];
+
+// Validation middleware for getting Products
+export const getProductsValidate = [
+    // Type must be a valid ProductType if provided (optional)
+    query('type')
+        .optional()
+        .isIn(Object.values(ProductType))
+        .withMessage('Type must be a valid ProductType.'),
+
+    // Year must be a positive integer if provided (optional)
+    query('year')
+        .optional()
+        .isInt({ min: 0 })
+        .withMessage('Year must be a positive integer.'),
+
+    // Format must be one of the allowed formats if provided (optional)
+    query('format')
+        .optional()
+        .isIn(['jpg', 'png', 'tiff', 'mp4'])
+        .withMessage('Format must be jpg, png, tiff or mp4.'),
 
     // Use the centralized request validation middleware to handle any validation errors
     validateRequest
