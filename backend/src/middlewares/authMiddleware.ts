@@ -25,7 +25,7 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction) 
         // Check for the presence of the Authorization header and extract the token
         const token = req.header('Authorization')?.replace('Bearer ', '');
         if (!token) {
-            throw HttpErrorFactory.createError(HttpErrorCodes.InvalidToken, 'Missing token.');
+            return next(HttpErrorFactory.createError(HttpErrorCodes.InvalidToken, 'Missing token.'));
         }
         // Extract and verify the token
         const payload = verifyToken(token);
