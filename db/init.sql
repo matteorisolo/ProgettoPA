@@ -95,11 +95,11 @@ INSERT INTO users (first_name, last_name, email, password, role, tokens) VALUES
 -- PRODUCTS seed
 
 INSERT INTO products (title, type, year, format, cost, path) VALUES
-('Ancient Manuscript', 'manuscript', 1620, 'jpg', 5, '/files/manuscript1620.jpg'),
-('Historic Map', 'historical_cartography', 1780, 'png', 7, '/files/map1780.png'),
-('Restoration Video', 'historical_cartography', 1900, 'mp4', 8, '/files/restoration1900.mp4'),
-('Old Photograph', 'photograph', 1925, 'jpg', 4, '/files/photo1925.jpg'),
-('Historic Newspaper', 'newspaper', 1912, 'png', 6, '/files/newspaper1912.png');
+('Ancient Manuscript', 'manuscript', 1620, 'jpg', 5, '/usr/src/app/uploads/manuscript1620.jpg'),
+('Historic Map', 'historical_cartography', 1780, 'png', 7, '/usr/src/app/uploads/map1780.png'),
+('Restoration Video', 'historical_cartography', 1900, 'mp4', 8, '/usr/src/app/uploads/restoration1900.mp4'),
+('Old Photograph', 'photograph', 1925, 'jpg', 4, '/usr/src/app/uploads/photo1925.jpg'),
+('Historic Newspaper', 'newspaper', 1912, 'png', 6, '/usr/src/app/uploads/newspaper1912.png');
 
 
 -- PURCHASES seed
