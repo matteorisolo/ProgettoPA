@@ -53,12 +53,12 @@ export const purchaseProduct = async (req: Request, res: Response, next: NextFun
             type: purchaseType,
             recipientEmail: recipientEmail || null,
         };
-        const purchase = await PurchaseService.createPurchase(purchaseData);
+        const purchaseId = await PurchaseService.createPurchase(purchaseData);
 
         // Respond with success message and purchase details
         return res.status(201).json({
             message: "Purchase completed successfully",
-            purchaseId: purchase.idPurchase,
+            purchaseId: purchaseId,
             type: purchaseType
         });
     }
