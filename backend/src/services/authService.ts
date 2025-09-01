@@ -40,7 +40,7 @@ export class AuthService {
         }
 
          // 3) Sign the JWT.
-        const token = generateToken({ id: user.idUser, ruolo: user.role});
+        const token = generateToken({ id: user.idUser, role: user.role});
     
         // 4) Build the response DTO without password or other sensitive fields.
         const result: AuthLoginResult = {
