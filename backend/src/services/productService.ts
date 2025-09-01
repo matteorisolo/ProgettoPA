@@ -5,7 +5,7 @@ import { IProductCreationAttributes } from '../models/product';
 import { ProductType } from '../enums/ProductType'; 
 
 // Input DTO for creating a product
-export interface CreateProductInput {
+export interface ICreateProductInput {
     title: string;
     type: ProductType;
     year: number;
@@ -14,10 +14,8 @@ export interface CreateProductInput {
     path: string;
 }
 
-/**
- * Filters supported by GET /product (combined with AND).
- */
-export interface ProductListFilters {
+// Interface for product list filters
+export interface IProductListFilters {
     type?: ProductType | string;
     year?: number;
     format?: string;
@@ -26,7 +24,7 @@ export interface ProductListFilters {
 export class ProductService {
   // Create a new product
   static async createProduct(input: IProductCreationAttributes) {
-        const created: CreateProductInput = await productDao.create({
+        const created: ICreateProductInput = await productDao.create({
             title: input.title,
             type: input.type,
             year: input.year,
@@ -38,9 +36,7 @@ export class ProductService {
         return created;
   }
 
-  /**
-   * Retrieve a single product by ID.
-   */
+  // Get a product by its ID
   static async getById(idProduct: number) {
     if (!Number.isFinite(idProduct)) {
         throw HttpErrorFactory.createError(
@@ -52,18 +48,16 @@ export class ProductService {
     return product;
   }
 
-  /**
-   * List products with optional filters (AND semantics).
-   * If no filters are provided, returns all products.
-   */
-  static async list(filters: ProductListFilters = {}) {
+  // List products with optional filters
+  static async list(filters: IProductListFilters = {}) {
+    // Check if any filter is provided
     const hasAnyFilter =
       typeof filters.type !== 'undefined' ||
       typeof filters.year !== 'undefined' ||
       typeof filters.format !== 'undefined';
 
+    // No filters -> return all
     if (!hasAnyFilter) {
-        // No filters -> return all
         return await productDao.getAll();
     }
 
