@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS users (
 -- PRODUCTS table
 CREATE TABLE IF NOT EXISTS products (
     id_product SERIAL PRIMARY KEY,
-    title VARCHAR(255) NOT NULL,
+    title VARCHAR(255) UNIQUE NOT NULL,
     type enum_products_type NOT NULL,
     year INT NOT NULL,
     format VARCHAR(10) NOT NULL,       -- jpg, png, mp4

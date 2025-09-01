@@ -9,7 +9,7 @@ import { IUserAttributes } from '../models/appUser';
  * DTO returned to the client after a successful login.
  * We explicitly avoid exposing sensitive fields such as `password`.
  */
-export interface AuthLoginResult {
+export interface IAuthLoginResult {
     token: string;
     user: Pick<
         IUserAttributes,
@@ -18,7 +18,7 @@ export interface AuthLoginResult {
 }
 
 export class AuthService {
-    static async login(email: string, password: string): Promise<AuthLoginResult> {
+    static async login(email: string, password: string): Promise<IAuthLoginResult> {
         // 1) Fetch user by email via DAO
          const user = await userDao.getByEmail(email);
 
@@ -43,7 +43,7 @@ export class AuthService {
         const token = generateToken({ id: user.idUser, role: user.role});
     
         // 4) Build the response DTO without password or other sensitive fields.
-        const result: AuthLoginResult = {
+        const result: IAuthLoginResult = {
             token,
             user: {
                 idUser: user.idUser,
