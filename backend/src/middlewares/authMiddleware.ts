@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import { verifyToken } from '../utils/jwt';
 import { HttpErrorFactory } from '../utils/errors/HttpErrorFactory';
 import { HttpErrorCodes } from '../utils/errors/HttpErrorCodes';
+import jwt from 'jsonwebtoken';
 
 // Load environment variables
 dotenv.config();
@@ -35,11 +36,13 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction) 
     } 
     // Handle token verification errors
     catch (error: any) {
-        if (error.name === 'TokenExpiredError') {
-            next(HttpErrorFactory.createError(HttpErrorCodes.TokenExpiredError, 'Expired token.'));
-        } else {
-            next(HttpErrorFactory.createError(HttpErrorCodes.InvalidToken, 'Invalid token.'));
+        if (error instanceof jwt.TokenExpiredError)
+            throw HttpErrorFactory.createError(HttpErrorCodes.TokenExpiredError, "Expired JWT token.");
+        else if (error instanceof jwt.JsonWebTokenError) {
+            throw HttpErrorFactory.createError(HttpErrorCodes.InvalidToken, "Invalid JWT token.");
         }
+        else
+            throw HttpErrorFactory.createError(HttpErrorCodes.InternalServerError, "Error verifying JWT token.");
     }
 }
 
