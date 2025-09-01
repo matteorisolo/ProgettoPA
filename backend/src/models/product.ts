@@ -1,6 +1,7 @@
 import { DataTypes, Model, Optional } from 'sequelize';
 import Database from '../utils/database';
 import { ProductType } from '../enums/ProductType';
+import { FormatType } from '../enums/FormatType';
 
 // Get the singleton Sequelize instance
 const sequelize = Database.getInstance();
@@ -11,7 +12,7 @@ export interface IProductAttributes {
     title: string;
     type: ProductType;
     year: number;
-    format: string;
+    format: FormatType;
     cost: number;
     path: string;
 }
@@ -25,7 +26,7 @@ class Product extends Model<IProductAttributes, IProductCreationAttributes> impl
     public title!: string;
     public type!: ProductType;
     public year!: number;
-    public format!: string;
+    public format!: FormatType;
     public cost!: number;
     public path!: string;
 }

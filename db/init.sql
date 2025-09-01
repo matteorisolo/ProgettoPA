@@ -8,6 +8,7 @@ CREATE TYPE enum_users_role AS ENUM ('admin', 'user');
 CREATE TYPE enum_products_type AS ENUM ('manuscript', 'historical_cartography', 'photograph',
                                     'painting', 'map', 'document', 'newspaper', 'book');
 CREATE TYPE enum_purchases_type AS ENUM ('standard','gift','additional_download');
+CREATE TYPE enum_format_type AS ENUM ('jpg', 'png', 'mp4');
 
 -- =====================================
 -- Creation of tables
@@ -30,7 +31,7 @@ CREATE TABLE IF NOT EXISTS products (
     title VARCHAR(255) UNIQUE NOT NULL,
     type enum_products_type NOT NULL,
     year INT NOT NULL,
-    format VARCHAR(10) NOT NULL,       -- jpg, png, mp4
+    format enum_format_type NOT NULL,
     cost FLOAT NOT NULL,
     path VARCHAR(255) NOT NULL
 );

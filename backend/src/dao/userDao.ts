@@ -114,6 +114,40 @@ class UserDao implements IUserDAO {
             );
         }
     }
+
+    // Update user's token balance
+    public async updateTokens(
+        id: number,
+        newTokens: number,
+        options?: { transaction?: Transaction }
+    ): Promise<User> {
+    try {
+        const [rows, updated] = await User.update(
+        { tokens: newTokens } as Partial<IUserAttributes>,
+        {
+            where: { idUser: id },
+            returning: true,
+            transaction: options?.transaction,
+        }   
+        );
+
+        if (rows === 0) {
+        throw HttpErrorFactory.createError(
+            HttpErrorCodes.NotFound,
+            `User with ID ${id} not found.`
+            );
+        }
+
+        // updated is an array of updated users; return the first one
+        return updated[0];
+    } catch (error) {
+        if (error instanceof HttpError) throw error;
+        throw HttpErrorFactory.createError(
+            HttpErrorCodes.InternalServerError,
+            `Error updating tokens for user with ID ${id}.`
+            );
+        }
+    }
 }
 
 export default new UserDao();

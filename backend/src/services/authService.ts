@@ -57,6 +57,29 @@ export class AuthService {
 
         return result;
     }
+
+    // Retrieve user details by ID, excluding sensitive fields.
+      static async getUserById(idUser: number): Promise<
+        Pick<IUserAttributes, 'idUser' | 'firstName' | 'lastName' | 'email' | 'role' | 'tokens'>
+    > {
+        const user = await userDao.getById(idUser); // <-- Assumo che nel tuo DAO ci sia getById
+
+        if (!user) {
+            throw HttpErrorFactory.createError(
+                HttpErrorCodes.NotFound,
+                `User not found with id ${idUser}.`
+            );
+        }
+
+        return {
+            idUser: user.idUser,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            email: user.email,
+            role: user.role,
+            tokens: user.tokens,
+        };
+    }
 }
 
 export default AuthService;

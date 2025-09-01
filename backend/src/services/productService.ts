@@ -3,13 +3,14 @@ import { HttpErrorFactory } from '../utils/errors/HttpErrorFactory';
 import { HttpErrorCodes } from '../utils/errors/HttpErrorCodes';
 import { IProductCreationAttributes } from '../models/product';
 import { ProductType } from '../enums/ProductType'; 
+import { FormatType } from '../enums/FormatType';
 
 // Input DTO for creating a product
 export interface ICreateProductInput {
     title: string;
     type: ProductType;
     year: number;
-    format: string;
+    format: FormatType;
     cost: number;
     path: string;
 }
@@ -18,7 +19,7 @@ export interface ICreateProductInput {
 export interface IProductListFilters {
     type?: ProductType | string;
     year?: number;
-    format?: string;
+    format?: FormatType | string;
 }
 
 export class ProductService {
