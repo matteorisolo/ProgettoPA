@@ -6,6 +6,7 @@ import { IProductCreationAttributes } from '../models/product';
 import { IProductListFilters } from '../services/productService';
 import fs from 'fs';
 import path from 'path';
+import { FormatType } from '../enums/FormatType';
 
 // Define the directory to store uploaded files
 const uploadDir = path.join(__dirname, '../../uploads');
@@ -59,7 +60,7 @@ export const getProducts = async (req: Request, res: Response, next: NextFunctio
         const filters: IProductListFilters = {
             type: req.query.type as string,
             year: req.query.year ? Number(req.query.year) : undefined,
-            format: req.query.format as string,
+            format: req.query.format as FormatType,
         };
 
         // Get the list of products from the service with the applied filters
