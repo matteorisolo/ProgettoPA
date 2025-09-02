@@ -23,11 +23,10 @@ export interface IPurchaseRepository {
     opts?: { type?: PurchaseType }
   ): Promise<IPurchaseDetailsDTO[]>;
   hasUserPurchasedProduct(userId: number, productId: number): Promise<boolean>;
-  productExists(productId: number): Promise<boolean>;              // <-- aggiunto
+  productExists(productId: number): Promise<Product | null>;              
 }
 
-class PurchaseRepository implements IPurchaseRepository {
-  /** Aggrega purchase + product + buyer + (recipient) */
+class purchaseRepository implements IPurchaseRepository {
   async getDetailsById(idPurchase: number): Promise<IPurchaseDetailsDTO> {
     const p = await purchaseDao.getById(idPurchase);
 
@@ -45,7 +44,7 @@ class PurchaseRepository implements IPurchaseRepository {
     };
   }
 
-  /** Storico acquisti utente con filtro opzionale per tipo */
+  // Get purchase history for a user, optionally filtered by purchase type
   async getUserHistory(
     userId: number,
     opts?: { type?: PurchaseType }
@@ -75,7 +74,7 @@ class PurchaseRepository implements IPurchaseRepository {
     return results;
   }
 
-  /** True se l'utente ha già un acquisto STANDARD per quel prodotto */
+  // Check if a user has purchased a specific product
   async hasUserPurchasedProduct(userId: number, productId: number): Promise<boolean> {
     const existing = await purchaseDao.getByBuyerAndProduct(
       userId,
@@ -84,18 +83,18 @@ class PurchaseRepository implements IPurchaseRepository {
     return !!existing;
   }
 
-  /** Controlla se il prodotto esiste davvero */
-  async productExists(productId: number): Promise<boolean> {
-  try {
-    await productDao.getById(productId); // lancia NotFound se non esiste
-    return true;
-  } catch (err) {
-    if (err instanceof HttpError && err.statusCode === StatusCodes.NOT_FOUND) {
-      return false; // prodotto non trovato
+  // Check if a product exists by its ID and return the product or null
+    async productExists(productId: number): Promise<Product | null> {
+    try {
+      const product = await productDao.getById(productId); 
+      return product;                                       
+    } catch (err) {
+      if (err instanceof HttpError && err.statusCode === StatusCodes.NOT_FOUND) {
+        return null;                                       
+      }
+      throw err;                                            
     }
-    throw err; // altri errori: rilancia (DB down, ecc.)
   }
 }
-}
 
-export default new PurchaseRepository();
+export default new purchaseRepository();
