@@ -49,7 +49,7 @@ export const updateUserTokens = async (req: Request, res: Response, next: NextFu
         const { tokens } = req.body;
 
         // Update the user's tokens using the service
-        const newTokens = await AuthService.updateTokens(id, tokens);
+        const newTokens = await AuthService.updateTokens(Number(id), tokens);
 
         // Return the updated tokens
         return res.status(200).json({
