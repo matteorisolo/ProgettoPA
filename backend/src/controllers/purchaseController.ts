@@ -1,13 +1,11 @@
 import { Request, Response, NextFunction } from "express";
-import Product from "../models/product";
-import Purchase from "../models/purchase";
-import AppUser from "../models/appUser";
 import { IPurchaseCreationAttributes } from "../models/purchase";
 import { PurchaseType } from "../enums/PurchaseType";
 import { HttpErrorFactory } from "../utils/errors/HttpErrorFactory";
 import { HttpErrorCodes } from "../utils/errors/HttpErrorCodes";
 import { RequestWithUser } from "../middlewares/authMiddleware";
-import { get } from "http";
+import { AuthService } from "../services/authService";
+import purchaseRepository from "../repositories/purchaseRepository";
 
 // Controller function to handle purchasing a product
 export const purchaseProduct = async (req: Request, res: Response, next: NextFunction) => {
@@ -18,14 +16,14 @@ export const purchaseProduct = async (req: Request, res: Response, next: NextFun
         const idUser = (req as RequestWithUser).user.id;
 
         // Check if product to be purchased exists
-        const product = await productExists(productId);
+        const product = await purchaseRepository.productExists(productId);
         if (!product) {
             throw HttpErrorFactory.createError(HttpErrorCodes.NotFound, "Product not found.");
         }
 
         // Check if a standard purchase already exists for this user and product
         let purchaseType = PurchaseType.STANDARD;
-        const existingPurchase = await hasUserPurchased(idUser, productId);
+        const existingPurchase = await purchaseRepository.hasUserPurchasedProduct(idUser, productId);
         // If yes, set purchaseType to ADDITIONAL_DOWNLOAD, else to GIFT if recipientEmail is provided
         if (existingPurchase && !recipientEmail) {
             purchaseType = PurchaseType.ADDITIONAL_DOWNLOAD;
@@ -41,15 +39,15 @@ export const purchaseProduct = async (req: Request, res: Response, next: NextFun
         }
 
         // Check if user has enough tokens to make the purchase
-        const user = await getUserById(idUser);
+        const user = await AuthService.getUserById(idUser);
         if (user.tokens < cost) {
             throw HttpErrorFactory.createError(HttpErrorCodes.BadRequest, "Insufficient tokens for this purchase.");
         }
 
         // Create the purchase record
         const purchaseData: IPurchaseCreationAttributes = {
-            buyerId: user.id_user,
-            productId: product.id_product,
+            buyerId: user.idUser,
+            productId: product.idProduct,
             type: purchaseType,
             recipientEmail: recipientEmail || null,
         };
