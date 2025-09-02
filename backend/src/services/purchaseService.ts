@@ -31,37 +31,38 @@ export class PurchaseService {
         };
 
         if (input.type === PurchaseType.GIFT) {
-        totalCost = product.cost + 0.5;
+            totalCost = product.cost + 0.5;
 
-       
-        const email = input.recipientEmail!.trim();
-        const recipientUser = await userDao.getByEmail(email);
-        if (!recipientUser) {
+        
+            const email = input.recipientEmail!.trim();
+            const recipientUser = await userDao.getByEmail(email);
+            if (!recipientUser) {
+                throw HttpErrorFactory.createError(
+                    HttpErrorCodes.BadRequest,
+                    'Recipient must be a registered user.'
+                );
+            }
+            const recipientId = (recipientUser as any).idUser ?? recipientUser.idUser;
+
+            toCreate.recipientId = recipientId;
+            toCreate.recipientEmail = email;
+        } 
+        else if (input.type !== PurchaseType.STANDARD) {
             throw HttpErrorFactory.createError(
                 HttpErrorCodes.BadRequest,
-                'Recipient must be a registered user.'
+                `Unsupported purchase type: ${input.type}`
             );
-        }
-        const recipientId = (recipientUser as any).idUser ?? recipientUser.idUser;
-
-        toCreate.recipientId = recipientId;
-        toCreate.recipientEmail = email;
-        } else if (input.type !== PurchaseType.STANDARD) {
-        throw HttpErrorFactory.createError(
-            HttpErrorCodes.BadRequest,
-            `Unsupported purchase type: ${input.type}`
-        );
         }
 
         //Transaction: check user tokens, create purchase, update user tokens
         const sequelize = Database.getInstance();
         return await sequelize.transaction(async (t) => {
-        const purchase = await purchaseDao.create(toCreate, { transaction: t });
+            const purchase = await purchaseDao.create(toCreate, { transaction: t });
 
-        await userDao.updateTokens(input.buyerId, user.tokens - totalCost, { transaction: t });
+            await userDao.updateTokens(input.buyerId, user.tokens - totalCost, { transaction: t });
 
-        // (futuro) qui potrai aggiungere la generazione del link di download/filigrana
-        return { purchaseId: purchase.idPurchase };
+            // (futuro) qui potrai aggiungere la generazione del link di download/filigrana
+            return { purchaseId: purchase.idPurchase };
         });
     }
 

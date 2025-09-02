@@ -121,22 +121,22 @@ class UserDao implements IUserDAO {
         newTokens: number,
         options?: { transaction?: Transaction }
     ): Promise<User> {
-    try {
-        const [rows, updated] = await User.update(
-        { tokens: newTokens } as Partial<IUserAttributes>,
-        {
-            where: { idUser: id },
-            returning: true,
-            transaction: options?.transaction,
-        }   
-        );
-
-        if (rows === 0) {
-        throw HttpErrorFactory.createError(
-            HttpErrorCodes.NotFound,
-            `User with ID ${id} not found.`
+        try {
+            const [rows, updated] = await User.update(
+                { tokens: newTokens } as Partial<IUserAttributes>,
+                {
+                    where: { idUser: id },
+                    returning: true,
+                    transaction: options?.transaction,
+                }   
             );
-        }
+
+            if (rows === 0) {
+                throw HttpErrorFactory.createError(
+                    HttpErrorCodes.NotFound,
+                    `User with ID ${id} not found.`
+                );
+            }
 
         // updated is an array of updated users; return the first one
         return updated[0];

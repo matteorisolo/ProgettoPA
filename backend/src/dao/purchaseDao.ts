@@ -210,35 +210,34 @@ class PurchaseDao implements IPurchaseDAO {
         type?: PurchaseType;
         recipientEmail?: string;
     }): Promise<Purchase[]> {
-    try {
-        const where: import('sequelize').WhereOptions<IPurchaseAttributes> = {};
+        try {
+            const where: import('sequelize').WhereOptions<IPurchaseAttributes> = {};
 
-        if (typeof filters.buyerId === 'number' && Number.isFinite(filters.buyerId)) {
-        (where as any).buyerId = filters.buyerId;
-        }
-        if (typeof filters.productId === 'number' && Number.isFinite(filters.productId)) {
-        (where as any).productId = filters.productId;
-        }
-        if (filters.type) {
-        (where as any).type = filters.type;
-        }
-        if (filters.recipientEmail && filters.recipientEmail.trim()) {
-        (where as any).recipientEmail = filters.recipientEmail.trim();
-        }
+            if (typeof filters.buyerId === 'number' && Number.isFinite(filters.buyerId)) {
+                (where as any).buyerId = filters.buyerId;
+            }
+            if (typeof filters.productId === 'number' && Number.isFinite(filters.productId)) {
+                (where as any).productId = filters.productId;
+            }
+            if (filters.type) {
+                (where as any).type = filters.type;
+            }
+            if (filters.recipientEmail && filters.recipientEmail.trim()) {
+                (where as any).recipientEmail = filters.recipientEmail.trim();
+            }
 
-        return await Purchase.findAll({
-        where,
-        order: [['createdAt', 'DESC']],
-        });
-    } catch (error) {
-        if (error instanceof HttpError) throw error;
-        throw HttpErrorFactory.createError(
-            HttpErrorCodes.InternalServerError,
-            'Error retrieving purchases by filters.'
-        );
+            return await Purchase.findAll({
+                where,
+                order: [['createdAt', 'DESC']],
+            });
+        } catch (error) {
+            if (error instanceof HttpError) throw error;
+            throw HttpErrorFactory.createError(
+                HttpErrorCodes.InternalServerError,
+                'Error retrieving purchases by filters.'
+            );
+        }
     }
-    }
-
 }
 
 export default new PurchaseDao();

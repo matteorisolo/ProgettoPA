@@ -36,7 +36,7 @@ export class AuthService {
             throw HttpErrorFactory.createError(
                 HttpErrorCodes.Unauthorized,
                 'Invalid email or password.'
-        );
+            );
         }
 
          // 3) Sign the JWT.
@@ -59,7 +59,7 @@ export class AuthService {
     }
 
     // Retrieve user details by ID, excluding sensitive fields.
-      static async getUserById(idUser: number): Promise<
+    static async getUserById(idUser: number): Promise<
         Pick<IUserAttributes, 'idUser' | 'firstName' | 'lastName' | 'email' | 'role' | 'tokens'>
     > {
         const user = await userDao.getById(idUser); // <-- Assumo che nel tuo DAO ci sia getById
