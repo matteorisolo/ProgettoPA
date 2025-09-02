@@ -12,7 +12,7 @@ export interface IPurchaseCreatedOutput {
   purchaseId: number;
 }
 
-export class purchaseService {
+export class PurchaseService {
     //Create a new purchase
     static async createPurchase(input: IPurchaseCreationAttributes): Promise<IPurchaseCreatedOutput> {
         const [user, product] = await Promise.all([
@@ -76,4 +76,4 @@ export class purchaseService {
     }
 }
 
-export default purchaseService;
+export default PurchaseService;
