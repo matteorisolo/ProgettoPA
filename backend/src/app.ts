@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import authRoutes from './routes/authRoutes';
 import productRoutes from './routes/productRoutes';
 import purchaseRoutes from './routes/purchaseRoutes';
+import userRoutes from './routes/userRoutes';
 import { HttpErrorFactory } from './utils/errors/HttpErrorFactory';
 import { HttpErrorCodes } from './utils/errors/HttpErrorCodes';
 import { errorHandler } from './middlewares/errorHandlerMiddleware';
@@ -20,6 +21,7 @@ app.use(express.json());
 app.use('/', authRoutes);
 app.use('/', productRoutes);
 app.use('/', purchaseRoutes);
+app.use('/', userRoutes);
 
 // Middleware for handling 404 errors
 app.use((req, res, next) => {
