@@ -5,6 +5,7 @@ import { HttpErrorFactory } from "../utils/errors/HttpErrorFactory";
 import { HttpErrorCodes } from "../utils/errors/HttpErrorCodes";
 import { RequestWithUser } from "../middlewares/authMiddleware";
 import { AuthService } from "../services/authService";
+import { PurchaseService } from "../services/purchaseService";
 import purchaseRepository from "../repositories/purchaseRepository";
 
 // Controller function to handle purchasing a product
