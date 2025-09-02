@@ -16,24 +16,23 @@ export class PurchaseService {
     //Create a new purchase
     static async createPurchase(input: IPurchaseCreationAttributes): Promise<IPurchaseCreatedOutput> {
         const [user, product] = await Promise.all([
-        userDao.getById(input.buyerId),
-        productDao.getById(input.productId),
+            userDao.getById(input.buyerId),
+            productDao.getById(input.productId),
         ]);
 
     
         let totalCost = product.cost;
         const toCreate: IPurchaseCreationAttributes = {
-        buyerId: input.buyerId,
-        productId: input.productId,
-        type: input.type,
-        recipientId: null,
-        recipientEmail: null,
+            buyerId: input.buyerId,
+            productId: input.productId,
+            type: input.type,
+            recipientId: null,
+            recipientEmail: null,
         };
 
         if (input.type === PurchaseType.GIFT) {
             totalCost = product.cost + 0.5;
 
-        
             const email = input.recipientEmail!.trim();
             const recipientUser = await userDao.getByEmail(email);
             if (!recipientUser) {
