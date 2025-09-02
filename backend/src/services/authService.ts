@@ -62,7 +62,7 @@ export class AuthService {
     static async getUserById(idUser: number): Promise<
         Pick<IUserAttributes, 'idUser' | 'firstName' | 'lastName' | 'email' | 'role' | 'tokens'>
     > {
-        const user = await userDao.getById(idUser); // <-- Assumo che nel tuo DAO ci sia getById
+        const user = await userDao.getById(idUser);
 
         if (!user) {
             throw HttpErrorFactory.createError(
@@ -79,6 +79,24 @@ export class AuthService {
             role: user.role,
             tokens: user.tokens,
         };
+    }
+
+    // Update user tokens balance by adding the specified amount.
+    static async updateTokens(idUser: number, amount: number): Promise<number> {
+        const user = await userDao.getById(idUser);
+
+        if (!user) {
+                throw HttpErrorFactory.createError(
+                    HttpErrorCodes.NotFound,
+                    `User not found with id ${idUser}.`
+                );
+            }
+
+        const newBalance = user.tokens + amount; 
+
+        const updated = await userDao.updateTokens(idUser, newBalance);
+
+        return updated.tokens;
     }
 }
 
