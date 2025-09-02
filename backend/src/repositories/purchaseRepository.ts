@@ -23,7 +23,7 @@ export interface IPurchaseRepository {
     opts?: { type?: PurchaseType }
   ): Promise<IPurchaseDetailsDTO[]>;
   hasUserPurchasedProduct(userId: number, productId: number): Promise<boolean>;
-  productExists(productId: number): Promise<boolean>;              
+  productExists(productId: number): Promise<Product | null>;              
 }
 
 class purchaseRepository implements IPurchaseRepository {
@@ -83,18 +83,18 @@ class purchaseRepository implements IPurchaseRepository {
     return !!existing;
   }
 
-  // Check if a product exists by its ID
-  async productExists(productId: number): Promise<boolean> {
-  try {
-    await productDao.getById(productId); 
-    return true;
-  } catch (err) {
-    if (err instanceof HttpError && err.statusCode === StatusCodes.NOT_FOUND) {
-      return false; 
+  // Check if a product exists by its ID and return the product or null
+    async productExists(productId: number): Promise<Product | null> {
+    try {
+      const product = await productDao.getById(productId); 
+      return product;                                       
+    } catch (err) {
+      if (err instanceof HttpError && err.statusCode === StatusCodes.NOT_FOUND) {
+        return null;                                       
+      }
+      throw err;                                            
     }
-    throw err; 
   }
-}
 }
 
 export default new purchaseRepository();
