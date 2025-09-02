@@ -8,7 +8,7 @@ CREATE TYPE enum_users_role AS ENUM ('admin', 'user');
 CREATE TYPE enum_products_type AS ENUM ('manuscript', 'historical_cartography', 'photograph',
                                     'painting', 'map', 'document', 'newspaper', 'book');
 CREATE TYPE enum_purchases_type AS ENUM ('standard','gift','additional_download');
-CREATE TYPE enum_format_type AS ENUM ('jpg', 'png', 'mp4');
+CREATE TYPE enum_format_type AS ENUM ('jpg', 'png', 'mp4', 'tiff');
 
 -- =====================================
 -- Creation of tables
