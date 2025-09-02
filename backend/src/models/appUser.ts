@@ -68,7 +68,7 @@ AppUser.init(
             allowNull: false,
         },
         tokens: {
-            type: DataTypes.INTEGER,
+            type: DataTypes.FLOAT,
             allowNull: false,
             // Default value for tokens is set to 20
             defaultValue: 20,

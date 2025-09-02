@@ -46,7 +46,13 @@ export class PurchaseService {
             toCreate.recipientId = recipientId;
             toCreate.recipientEmail = email;
         } 
-        else if (input.type !== PurchaseType.STANDARD) {
+        else if (input.type === PurchaseType.STANDARD) {
+            totalCost = product.cost;
+        }
+        else if (input.type === PurchaseType.ADDITIONAL_DOWNLOAD) {
+            totalCost = 1;
+        }
+        else {
             throw HttpErrorFactory.createError(
                 HttpErrorCodes.BadRequest,
                 `Unsupported purchase type: ${input.type}`

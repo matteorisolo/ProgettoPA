@@ -1,7 +1,7 @@
 import { DAO } from './daoInterface';
 import Purchase, {
   IPurchaseAttributes,
-  IPurchaseCreationAttributes, // <-- la importo dal model (nessuna definizione qui)
+  IPurchaseCreationAttributes, 
 } from '../models/purchase';
 import { Transaction, Op, WhereOptions } from 'sequelize';
 import { HttpErrorFactory } from '../utils/errors/HttpErrorFactory';
