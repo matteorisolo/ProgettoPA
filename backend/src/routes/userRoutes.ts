@@ -9,7 +9,7 @@ const router = Router();
 
 // Route for getting the token of the logged-in user
 router.get(
-    "/me/token",
+    "users/me/token",
     authMiddleware,
     authorize([UserRole.USER]),
     getMyTokens
@@ -17,7 +17,7 @@ router.get(
 
 // Route for getting the token of a specific user by ID (admin only)
 router.get(
-    "/:id/token",
+    "users/:id/token",
     authMiddleware,
     authorize([UserRole.ADMIN]),
     getUserCreditValidate,
@@ -26,7 +26,7 @@ router.get(
 
 // Route for updating the token of a specific user by ID (admin only)
 router.patch(
-    "/:id/token",
+    "users/:id/token",
     authMiddleware,
     authorize([UserRole.ADMIN]),
     updateCreditValidate,   // validazione input (tokens > 0, ecc.)
