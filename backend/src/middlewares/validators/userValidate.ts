@@ -11,7 +11,7 @@ export const getUserCreditValidate = [
 ];
 
 // Validation middleware for PATCH /users/:id/token
-export const updateCreditValidate = [
+export const updateTokensValidate = [
     param("id")
         .notEmpty().withMessage("Id is required.")
         .isInt({ min: 1 }).withMessage("Id must be a positive integer."),
