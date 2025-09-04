@@ -16,7 +16,7 @@ export interface IDownloadAttributes {
 }
 
 // Define creation attributes, making idDownload, timesUsed, expiresAt, and createdAt optional for creation (idDownload is auto-incremented, timesUsed has a default value, expiresAt is optional, createdAt has a default value)
-export interface IDownloadCreationAttributes extends Optional<IDownloadAttributes, 'idDownload' | 'timesUsed' | 'expiresAt' | 'createdAt'> {}
+export interface IDownloadCreationAttributes extends Optional<IDownloadAttributes, 'idDownload' | 'downloadUrl' | 'timesUsed' | 'expiresAt' | 'createdAt'> {}
 
 class Download extends Model<IDownloadAttributes, IDownloadCreationAttributes> implements IDownloadAttributes {
     public idDownload!: number;
@@ -26,13 +26,6 @@ class Download extends Model<IDownloadAttributes, IDownloadCreationAttributes> i
     public maxTimes!: number;
     public expiresAt?: Date | null;
     public createdAt!: Date;
-
-    // Helper method to check if the download link is expired
-    public isExpired(): boolean {
-        if (!this.expiresAt) 
-            return false;
-        return new Date() > this.expiresAt;
-    }
 }
 
 // Initialize the Download sequelize model with its attributes and options

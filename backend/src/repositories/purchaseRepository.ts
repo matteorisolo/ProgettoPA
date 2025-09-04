@@ -7,9 +7,10 @@ import Product from '../models/product';
 import User from '../models/appUser';
 import { HttpError } from '../utils/errors/HttpError';
 import { StatusCodes } from 'http-status-codes';
+import AppUser from '../models/appUser';
 
 export interface IPurchaseDetailsDTO {
-	purchase: Purchase;
+	type: PurchaseType;
 	product: Product;
 	buyer: Omit<User, 'password'>;
 	recipient?: Omit<User, 'password'> | null;
@@ -36,10 +37,10 @@ class purchaseRepository implements IPurchaseRepository {
 		]);
 
 		return {
-			purchase: p,
+			type: p.type,
 			product,
-			buyer: buyer as any,
-			recipient: recipient as any,
+			buyer: buyer as AppUser,
+			recipient: recipient as AppUser,
 		};
   	}
 
@@ -62,10 +63,10 @@ class purchaseRepository implements IPurchaseRepository {
 				]);
 
 				return {
-					purchase: p,
+					type: p.type,
 					product,
-					buyer: buyer as any,
-					recipient: recipient as any,
+					buyer: buyer as AppUser,
+					recipient: recipient as AppUser,
 				} as IPurchaseDetailsDTO;
 			})
 		);
