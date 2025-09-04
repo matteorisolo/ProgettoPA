@@ -1,6 +1,5 @@
 import { body } from "express-validator";
 import validateRequest from "./validateRequestMiddleware";
-import { FormatType } from "../../enums/FormatType";
 
 // Validation middleware for purchasing an asset
 export const purchaseValidate = [
@@ -8,13 +7,6 @@ export const purchaseValidate = [
 	body("productId")
 		.notEmpty().withMessage("Reference to product is required.")
 		.isInt({ min: 1 }).withMessage("Product ID must be a positive integer."),
-
-	// outputProduct must not be empty and must be a valid FormatType
-	body("outputFormat")
-		.notEmpty().withMessage("Output format is required.")
-		.isIn(Object.values(FormatType)).withMessage(
-			`Output format must be one in: ${Object.values(FormatType).join(", ")}`
-	),
 
 	// recipientEmail is optional but if provided, must be a valid email
 	body("recipientEmail")

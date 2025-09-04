@@ -7,6 +7,7 @@ import { RequestWithUser } from "../middlewares/authMiddleware";
 import { AuthService } from "../services/authService";
 import { PurchaseService } from "../services/purchaseService";
 import purchaseRepository from "../repositories/purchaseRepository";
+import { IDownloadCreationAttributes } from "../models/download";
 
 // Controller function to handle purchasing a product
 export const purchaseProduct = async (req: Request, res: Response, next: NextFunction) => {
@@ -54,11 +55,20 @@ export const purchaseProduct = async (req: Request, res: Response, next: NextFun
         };
         const purchaseId = await PurchaseService.createPurchase(purchaseData);
 
+        // Create the download record associated with this purchase
+        const downloadData: IDownloadCreationAttributes = {
+            maxTimes: purchaseType === PurchaseType.GIFT ? 2 : 1,
+            timesUsed: 0,
+            expiresAt: null            // o data di scadenza se vuoi link temporaneo
+        };
+        const download = await DownloadService.createDownload(downloadData);
+
         // Respond with success message and purchase details
         return res.status(201).json({
             message: "Purchase completed successfully",
             purchaseId: purchaseId,
-            type: purchaseType
+            type: purchaseType,
+            downloadUrl: download.downloadUrl
         });
     }
     // Pass any errors to the error handling middleware
