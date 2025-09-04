@@ -25,7 +25,7 @@ export const getDownload = async (req: Request, res: Response, next: NextFunctio
         }
 
         // Check if the download link is expired or has been used up
-        if (downloadRepository.isExpired(downloadUrl)) {
+        if (await downloadRepository.isExpired(downloadUrl)) {
             throw HttpErrorFactory.createError(HttpErrorCodes.BadRequest, "Download link has expired.");
         }
         // Check if the download has already been used the maximum allowed times
@@ -47,7 +47,7 @@ export const getDownload = async (req: Request, res: Response, next: NextFunctio
         const isRecipient =
             isGift &&
             userEmail &&
-            !!purchase.recipient.email &&
+            !!purchase.recipient &&
             userEmail === purchase.recipient.email;
         // Authorization check: ensure the user is either the buyer or the gift recipient
         if (!(isBuyer || isRecipient)) {

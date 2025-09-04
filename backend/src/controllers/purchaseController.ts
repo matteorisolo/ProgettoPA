@@ -8,6 +8,7 @@ import { AuthService } from "../services/authService";
 import { PurchaseService } from "../services/purchaseService";
 import purchaseRepository from "../repositories/purchaseRepository";
 import { IDownloadCreationAttributes } from "../models/download";
+import { DownloadService } from "../services/downloadService";
 
 // Controller function to handle purchasing a product
 export const purchaseProduct = async (req: Request, res: Response, next: NextFunction) => {
@@ -53,13 +54,14 @@ export const purchaseProduct = async (req: Request, res: Response, next: NextFun
             type: purchaseType,
             recipientEmail: recipientEmail || null,
         };
-        const purchaseId = await PurchaseService.createPurchase(purchaseData);
+        const purchaseId = (await PurchaseService.createPurchase(purchaseData)).purchaseId;
 
         // Create the download record associated with this purchase
         const downloadData: IDownloadCreationAttributes = {
+            purchaseId: purchaseId,
             maxTimes: purchaseType === PurchaseType.GIFT ? 2 : 1,
             timesUsed: 0,
-            expiresAt: null            // o data di scadenza se vuoi link temporaneo
+            expiresAt: null
         };
         const download = await DownloadService.createDownload(downloadData);
 
