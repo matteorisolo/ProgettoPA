@@ -1,4 +1,4 @@
-import { param, query } from "express-validator";
+import { body, param, query } from "express-validator";
 import validateRequest from "./validateRequestMiddleware";
 import { FormatType } from "../../enums/FormatType";
 
@@ -9,7 +9,7 @@ export const downloadValidate = [
         .isUUID().withMessage("Download URL must be a valid UUID"),
 
     // Validazione del formato di uscita opzionale
-    query("format")
+    body("outputFormat")
         .optional()
         .isIn(Object.values(FormatType))
         .withMessage(`Format must be one of: ${Object.values(FormatType).join(", ")}`),

@@ -15,7 +15,7 @@ export const getDownload = async (req: Request, res: Response, next: NextFunctio
     try {
         // Extract parameters from request
         const { downloadUrl } = req.params;
-        const outputFormat = req.query.format as FormatType;
+        const outputFormat = req.body.outputFormat as FormatType;
         const authUser = (req as RequestWithUser).user;
 
         // Retrieving and checking the download link
