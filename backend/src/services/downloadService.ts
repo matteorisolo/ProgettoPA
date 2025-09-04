@@ -17,6 +17,8 @@ import purchaseDao from '../dao/purchaseDao';
 const im = require('imagemagick');
 //ConvertAsync in order to use async/await with imagemagick
 const convertAsync = promisify(im.convert);
+const identifyAsync = promisify(im.identify);
+
 
 // FFMPEG for video processing
 import ffmpeg from 'fluent-ffmpeg';
@@ -32,6 +34,10 @@ export interface ICreatedDownloadOutput {
 // Temporary directory in order to save watermarked files
 const TMP_DIR = process.env.TMP_DIR || '/usr/src/app/tmp';
 if (!fs.existsSync(TMP_DIR)) fs.mkdirSync(TMP_DIR, { recursive: true });
+
+function clamp(n: number, min: number, max: number) {
+    return Math.max(min, Math.min(max, n));
+}
 
 // Functions for checking file types
 function isImage(f: FormatType) {
@@ -82,18 +88,37 @@ async function watermarkAndMaybeConvertImage(
             `Unsupported image format: ${requested}`
         );
     }
+    const fontPath = process.env.IM_FONT_PATH || '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf';
     const watermarkText = safeWatermarkText(watermarkRawText);
     const base = path.basename(inputPath, path.extname(inputPath));
     const outPath = buildTmpName(base + '-wm', outFmt);
 
+    const meta: any = await identifyAsync(inputPath); // typical: { format, width, height, ... }
+    const width: number  = Number(meta.width);
+    const height: number = Number(meta.height);
+
+    // 2) Calcolo dinamico della dimensione
+    const scale = Number(process.env.WM_SCALE ?? '0.08');        // 8% del lato minore (default)
+    const minPt = Number(process.env.WM_MIN_PT ?? '32');         // minimo
+    const maxPt = Number(process.env.WM_MAX_PT ?? '180');        // massimo
+    const pointSize = clamp(Math.round(Math.min(width, height) * scale), minPt, maxPt);
+
     // ImageMagick command:
     const args = [
         inputPath,
-        '-gravity', 'center',
-        '-fill', 'rgba(255,255,255,0.72)',
-        '-stroke', 'rgba(0,0,0,0.6)', '-strokewidth', '2',
-        '-pointsize', '36',
-        '-annotate', '0', watermarkText,
+        '(',
+        '-background', 'none',     // layer testo trasparente
+        '-fill', '#FFFFFF',
+        '-stroke', '#000000', '-strokewidth', '2',
+        '-font', fontPath,
+        '-pointsize', String(pointSize),
+        // label:<testo> crea un'immagine con il testo senza occuparsi di coordinate
+        `label:${watermarkText}`,
+        ')',
+
+        '-gravity', 'center',        // centra il layer testo
+        '-compose', 'over',          // composizione normale
+        '-composite',                // applica il layer testo sopra
         outPath,
     ];
     await convertAsync(args);
