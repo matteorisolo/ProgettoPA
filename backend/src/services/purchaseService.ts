@@ -66,7 +66,6 @@ export class PurchaseService {
 
             await userDao.updateTokens(input.buyerId, user.tokens - totalCost, { transaction: t });
 
-            // (futuro) qui potrai aggiungere la generazione del link di download/filigrana
             return { purchaseId: purchase.idPurchase };
         });
     }

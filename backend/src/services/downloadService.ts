@@ -74,7 +74,7 @@ async function watermarkAndMaybeConvertImage(
     originalFmt: FormatType,                  
     requested: FormatType | null,              
     watermarkRawText: string
-): Promise<{ filePath: string; filename: string; contentType: string }> {
+): Promise<{ filePath: string; fileName: string; contentType: string }> {
     const outFmt: FormatType = requested ?? originalFmt;
     if (!isImage(outFmt)) {
         throw HttpErrorFactory.createError(
@@ -100,7 +100,7 @@ async function watermarkAndMaybeConvertImage(
 
     return {
         filePath: outPath,
-        filename: path.basename(outPath),
+        fileName: path.basename(outPath),
         contentType: mimeFromFormat(outFmt),
     };
 }
@@ -109,7 +109,7 @@ async function watermarkAndMaybeConvertImage(
 async function watermarkVideoMp4(
     inputPath: string,
     watermarkRawText: string
-): Promise<{ filePath: string; filename: string; contentType: string }> {
+): Promise<{ filePath: string; fileName: string; contentType: string }> {
     const base = path.basename(inputPath, path.extname(inputPath));
     const outPath = buildTmpName(base + '-wm', FormatType.MP4);
 
@@ -138,7 +138,7 @@ async function watermarkVideoMp4(
 
     return {
         filePath: outPath,
-        filename: path.basename(outPath),
+        fileName: path.basename(outPath),
         contentType: mimeFromFormat(FormatType.MP4),
     };
 }
@@ -146,7 +146,7 @@ async function watermarkVideoMp4(
 // Interface for the prepared download file
 export interface IPreparedDownloadFile {
   filePath: string;
-  filename: string;
+  fileName: string;
   contentType: string;
 }
 
@@ -197,7 +197,7 @@ export class DownloadService {
         let prepared: IPreparedDownloadFile;
 
         let tmpPath;
-        let filename;
+        let fileName;
         let contentType;
 
         
@@ -215,7 +215,7 @@ export class DownloadService {
                 wmRaw
             );
             tmpPath = out.filePath; 
-            filename = out.filename; 
+            fileName = out.fileName; 
             contentType = out.contentType;
         } else if (isVideo(originalFmt)) {
                 if (requestedFmt && requestedFmt !== originalFmt) {
@@ -226,7 +226,7 @@ export class DownloadService {
             }
             const out = await watermarkVideoMp4(originalPath, wmRaw);
             tmpPath = out.filePath; 
-            filename = out.filename; 
+            fileName = out.fileName; 
             contentType = out.contentType;
         } else {
             throw HttpErrorFactory.createError(
@@ -251,7 +251,7 @@ export class DownloadService {
         }
         return prepared = {
             filePath: tmpPath,
-            filename,
+            fileName: fileName,
             contentType,
         };
     }
