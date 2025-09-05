@@ -56,7 +56,7 @@ export const getDownload = async (req: Request, res: Response, next: NextFunctio
             throw HttpErrorFactory.createError(HttpErrorCodes.BadRequest, "Download link already used for recipient.");
 
         // Process the download and convert format if necessary
-        const { filePath, fileName, contentType } = await DownloadService.processDownload(downloadUrl, outputFormat);
+        const { filePath, fileName, contentType } = await DownloadService.processDownload(downloadUrl, outputFormat, isBuyer);
 
         // Send the file to the client and clean up
         res.setHeader('Content-Type', contentType);
