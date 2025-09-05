@@ -59,8 +59,8 @@ export const purchaseProduct = async (req: Request, res: Response, next: NextFun
         // Create the download record associated with this purchase
         const downloadData: IDownloadCreationAttributes = {
             purchaseId: purchaseId,
-            maxTimes: purchaseType === PurchaseType.GIFT ? 2 : 1,
-            timesUsed: 0,
+            usedBuyer: false,
+            usedRecipient: purchaseType === PurchaseType.GIFT ? false : undefined, // only set for gifts
             expiresAt: null
         };
         const download = await DownloadService.createDownload(downloadData);

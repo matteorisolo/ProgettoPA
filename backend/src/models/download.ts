@@ -9,21 +9,22 @@ export interface IDownloadAttributes {
     idDownload: number;
     purchaseId: number;
     downloadUrl: string;
-    timesUsed: number;
-    maxTimes: number;
+    usedBuyer: boolean;
+    usedRecipient?: boolean;
     expiresAt?: Date | null;
     createdAt: Date;
 }
 
-// Define creation attributes, making idDownload, timesUsed, expiresAt, and createdAt optional for creation (idDownload is auto-incremented, timesUsed has a default value, expiresAt is optional, createdAt has a default value)
-export interface IDownloadCreationAttributes extends Optional<IDownloadAttributes, 'idDownload' | 'downloadUrl' | 'timesUsed' | 'expiresAt' | 'createdAt'> {}
+// Define creation attributes, making idDownload, timesUsed, expiresAt, and createdAt optional for creation (idDownload is auto-incremented, usedBuyer has a default value, 
+// userRecipient is optional, expiresAt is optional, createdAt has a default value)
+export interface IDownloadCreationAttributes extends Optional<IDownloadAttributes, 'idDownload' | 'downloadUrl' | 'usedBuyer' | 'usedRecipient' | 'expiresAt' | 'createdAt'> {}
 
 class Download extends Model<IDownloadAttributes, IDownloadCreationAttributes> implements IDownloadAttributes {
     public idDownload!: number;
     public purchaseId!: number;
     public downloadUrl!: string;
-    public timesUsed!: number;
-    public maxTimes!: number;
+    public usedBuyer!: boolean;
+    public usedRecipient?: boolean;
     public expiresAt?: Date | null;
     public createdAt!: Date;
 }
@@ -48,16 +49,16 @@ Download.init(
             defaultValue: DataTypes.UUIDV4,
             field: 'download_url',
         },
-        timesUsed: {
-            type: DataTypes.INTEGER,
+        usedBuyer: {
+            type: DataTypes.BOOLEAN,
             allowNull: false,
-            defaultValue: 0,
-            field: 'times_used',
+            defaultValue: false,
+            field: 'used_buyer',
         },
-        maxTimes: {
-            type: DataTypes.INTEGER,
-            allowNull: false,
-            field: 'max_times',
+        usedRecipient: {
+            type: DataTypes.BOOLEAN,
+            allowNull: true,
+            field: 'used_recipient',
         },
         expiresAt: {
             type: DataTypes.DATE,

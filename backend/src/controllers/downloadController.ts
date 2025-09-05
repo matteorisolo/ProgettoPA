@@ -28,10 +28,6 @@ export const getDownload = async (req: Request, res: Response, next: NextFunctio
         if (await downloadRepository.isExpired(downloadUrl)) {
             throw HttpErrorFactory.createError(HttpErrorCodes.BadRequest, "Download link has expired.");
         }
-        // Check if the download has already been used the maximum allowed times
-        if (download.timesUsed >= download.maxTimes) {
-            throw HttpErrorFactory.createError(HttpErrorCodes.BadRequest, "Download link already used.");
-        }
 
         // Retrieve purchase and product details associated with the download
         const purchase = await purchaseRepository.getDetailsById(download.purchaseId);
@@ -53,6 +49,11 @@ export const getDownload = async (req: Request, res: Response, next: NextFunctio
         if (!(isBuyer || isRecipient)) {
             throw HttpErrorFactory.createError(HttpErrorCodes.Forbidden, "You are not allowed to download this item.");
         }
+
+        if (isBuyer && download.usedBuyer)
+            throw HttpErrorFactory.createError(HttpErrorCodes.BadRequest, "Download link already used for buyer.");
+        else if (isRecipient && download.usedRecipient)
+            throw HttpErrorFactory.createError(HttpErrorCodes.BadRequest, "Download link already used for recipient.");
 
         // Process the download and convert format if necessary
         const { filePath, fileName, contentType } = await DownloadService.processDownload(downloadUrl, outputFormat);
