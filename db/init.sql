@@ -52,8 +52,8 @@ CREATE TABLE IF NOT EXISTS downloads (
     id_download SERIAL PRIMARY KEY,
     purchase_id INT NOT NULL REFERENCES purchases(id_purchase),
     download_url UUID NOT NULL DEFAULT gen_random_uuid(), -- secure unique link
-    times_used INT DEFAULT 0,
-    max_times INT NOT NULL,      -- 1 for normal purchase, 2 for gift
+    used_buyer BOOLEAN NOT NULL DEFAULT FALSE,      -- track if buyer has used the link
+    used_recipient BOOLEAN,                     -- track if recipient has used the link    
     expires_at TIMESTAMP,        -- optional, link expiration
     created_at TIMESTAMP DEFAULT NOW()
 );

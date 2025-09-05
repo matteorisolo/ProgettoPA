@@ -184,8 +184,7 @@ export class DownloadService {
     ): Promise<ICreatedDownloadOutput> {
         const payload: IDownloadCreationAttributes = {
         purchaseId: input.purchaseId,
-        maxTimes: input.maxTimes,
-        timesUsed: 0,         
+        usedBuyer: false,       
         expiresAt: null,      
         };
 
@@ -200,9 +199,16 @@ export class DownloadService {
     // Process the download request: validate, watermark, increment usage, send file
     static async processDownload(
         downloadUrl: string,
+        isBuyer: boolean,
         format?: FormatType
     ): Promise<IPreparedDownloadFile> {
-        const dl = await downloadRepository.getActiveByUrl(downloadUrl);
+        const dl = await downloadRepository.getByUrl(downloadUrl);
+        if (!dl) {
+                throw HttpErrorFactory.createError(
+                    HttpErrorCodes.NotFound,
+                    `Download not found for url ${downloadUrl}.`
+                );
+            }   
         const purchase = await purchaseDao.getById(dl.purchaseId);
         const product = await productDao.getById(purchase.productId);
 
@@ -265,7 +271,11 @@ export class DownloadService {
         const sequelize = Database.getInstance();
         try {
             await sequelize.transaction(async (t: Transaction) => {
-                await downloadRepository.incrementTimesUsedByUrl(downloadUrl, { transaction: t });
+                if (isBuyer) {
+                    await downloadRepository.setUsedBuyerByUrl(downloadUrl, { transaction: t });
+                }else {
+                    await downloadRepository.setUsedRecipientByUrl(downloadUrl, { transaction: t });
+                }
             });
         } catch (err) {
             if (tmpPath && fs.existsSync(tmpPath)) fs.unlink(tmpPath, () => {});

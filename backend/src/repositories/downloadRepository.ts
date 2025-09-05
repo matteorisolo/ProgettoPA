@@ -15,11 +15,9 @@ export interface IDownloadDetailsDTO {
 
 export interface IDownloadRepository {
     getByUrlWithPurchase(downloadUrl: string): Promise<IDownloadDetailsDTO>;
-    getActiveByUrl(downloadUrl: string): Promise<Download>;
-    incrementTimesUsedByUrl(
-        downloadUrl: string,
-        opts?: { transaction?: Transaction }
-    ): Promise<Download>;
+    getByUrl(downloadUrl: string): Promise<Download | null>;
+    setUsedBuyerByUrl(downloadUrl: string, opts?: { transaction?: Transaction }): Promise<Download>;
+    setUsedRecipientByUrl(downloadUrl: string, opts?: { transaction?: Transaction }): Promise<Download>;
     setExpiration(
         idDownload: number,
         expiresAt: Date | null,
@@ -27,6 +25,7 @@ export interface IDownloadRepository {
     ): Promise<Download>;
     listForUser(userId: number): Promise<IDownloadDetailsDTO[]>;
     listForPurchase(purchaseId: number): Promise<Download[]>;
+    isExpired(downloadUrl: string): Promise<boolean>;
 }
 
 class DownloadRepository implements IDownloadRepository {
@@ -38,45 +37,59 @@ class DownloadRepository implements IDownloadRepository {
         return { download, purchase };
     }
 
-    //Returns the download if it's still active (not expired and within usage limits)
-    async getActiveByUrl(downloadUrl: string): Promise<Download> {
+    // Retrieve a download by its URL
+    async getByUrl(downloadUrl: string): Promise<Download | null> {
+         const download = await Download.findOne({ where: { downloadUrl: downloadUrl } });
+         return download;
+         if (!download) {
+            return null;    
+        }
+    }
+
+    // Sets that the buyer has used the download link
+    async setUsedBuyerByUrl(
+        downloadUrl: string,
+        opts?: { transaction?: Transaction }
+    ): Promise<Download> {
         try {
-            const d = await downloadDao.getByDownloadUrl(downloadUrl); 
+            const d = await this.getByUrl(downloadUrl); 
 
-            if (d.expiresAt && new Date() > d.expiresAt) {
+            if (!d) {
                 throw HttpErrorFactory.createError(
-                    HttpErrorCodes.Forbidden, 
-                    'Download link expired.'
+                    HttpErrorCodes.NotFound,
+                    `Download not found for url ${downloadUrl}.`
                 );
-            }
+            }   
 
-            // limite utilizzi
-            if (d.timesUsed >= d.maxTimes) {
-                throw HttpErrorFactory.createError(
-                    HttpErrorCodes.Forbidden,
-                    'Download limit exceeded.'
-                );
-            }
+            d.usedBuyer = true; // Mark that the buyer has used the link
+            await d.save({ transaction: opts?.transaction });
 
             return d;
         } catch (err) {
             if (err instanceof HttpError) throw err;
             throw HttpErrorFactory.createError(
                 HttpErrorCodes.InternalServerError,
-                `Error validating download by url ${downloadUrl}.`
+                `Error incrementing timesUsed for url ${downloadUrl}.`
             );
         }
     }
 
-   // Increments the timesUsed counter for a download link after validating its status
-    async incrementTimesUsedByUrl(
+    // Sets that the recipient has used the download link
+    async setUsedRecipientByUrl(
         downloadUrl: string,
         opts?: { transaction?: Transaction }
     ): Promise<Download> {
         try {
-            const d = await this.getActiveByUrl(downloadUrl); // valida stato
+            const d = await this.getByUrl(downloadUrl); 
 
-            d.timesUsed += 1;
+            if (!d) {
+                throw HttpErrorFactory.createError(
+                    HttpErrorCodes.NotFound,
+                    `Download not found for url ${downloadUrl}.`
+                );
+            }   
+
+            d.usedRecipient = true; // Mark that the recipient has used the link
             await d.save({ transaction: opts?.transaction });
 
             return d;
@@ -130,14 +143,7 @@ class DownloadRepository implements IDownloadRepository {
         return downloadDao.getAllByPurchase(purchaseId);
     }
 
-    // Retrieve a download by its URL
-    async getByUrl(downloadUrl: string): Promise<Download | null> {
-         const download = await Download.findOne({ where: { downloadUrl: downloadUrl } });
-         return download;
-         if (!download) {
-            return null;    
-        }
-    }
+    
 
     // Check if a download link is expired based on its URL
     async isExpired(downloadUrl: string): Promise<boolean> {
