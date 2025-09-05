@@ -121,14 +121,14 @@ VALUES (2, 1, 'additional_download');
 
 -- DOWNLOADS seed
 
-INSERT INTO downloads (purchase_id, max_times)
-VALUES (1, 1);
+INSERT INTO downloads (purchase_id, used_buyer)
+VALUES (1, FALSE);
 
-INSERT INTO downloads (purchase_id, max_times)
-VALUES (2, 1);
+INSERT INTO downloads (purchase_id, used_buyer)
+VALUES (2, FALSE);
 
-INSERT INTO downloads (purchase_id, max_times)
-VALUES (3, 2);
+INSERT INTO downloads (purchase_id, used_buyer)
+VALUES (3, FALSE);
 
-INSERT INTO downloads (purchase_id, max_times)
-VALUES (4, 1);
+INSERT INTO downloads (purchase_id, used_buyer)
+VALUES (4, FALSE);
