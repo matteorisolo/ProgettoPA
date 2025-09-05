@@ -1,8 +1,10 @@
 import { body } from "express-validator";
+import { query } from "express-validator";
 import validateRequest from "./validateRequestMiddleware";
+import { ListType } from "../../enums/ListType";
 
 // Validation middleware for purchasing an asset
-export const purchaseValidate = [
+export const createPurchaseValidate = [
 	// productId must not be empty and must be a positive integer
 	body("productId")
 		.notEmpty().withMessage("Reference to product is required.")
@@ -15,4 +17,16 @@ export const purchaseValidate = [
 
 	// Middleware to handle validation results
 	validateRequest
+];
+
+// Validation middleware for getting user purchases
+export const getPurchasesValidate = [
+    // format is optional, but if provided, must be either 'json' or 'pdf'
+    query("format")
+        .optional()
+        .isIn(Object.values(ListType))
+        .withMessage(`List format must be one of: ${Object.values(ListType).join(", ")}`),
+
+    // Middleware to handle validation results
+    validateRequest
 ];
