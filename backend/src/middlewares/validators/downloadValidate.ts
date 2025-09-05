@@ -9,7 +9,7 @@ export const downloadValidate = [
         .isUUID().withMessage("Download URL must be a valid UUID"),
 
     // Validazione del formato di uscita opzionale
-    body("outputFormat")
+    query("outputFormat")
         .optional()
         .isIn(Object.values(FormatType))
         .withMessage(`Format must be one of: ${Object.values(FormatType).join(", ")}`),
