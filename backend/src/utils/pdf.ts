@@ -1,66 +1,86 @@
 import PDFDocument from "pdfkit";
-import Purchase from "../models/purchase";
 import Product from "../models/product";
+import { IPurchaseDetailsDTO } from "../repositories/purchaseRepository";
+import { PurchaseType } from "../enums/PurchaseType";
 
-interface GroupedPurchases {
-    [key: string]: (Purchase & { product?: Product })[];
+interface IGroupedPurchases {
+    standard: IPurchaseDetailsDTO[];
+    gift: IPurchaseDetailsDTO[];
+    additional_download: IPurchaseDetailsDTO[];
 }
 
 export const generatePDF = (
     userId: number,
-    groupedPurchases: GroupedPurchases
+    groupedPurchases: IGroupedPurchases
 ) => {
     return new Promise<Buffer>((resolve, reject) => {
+        const doc = new PDFDocument({ margin: 40 });
+        const buffers: Buffer[] = [];
 
-    const doc = new PDFDocument({ margin: 40 });
-    const buffers: Buffer[] = [];
+        doc.on("data", buffers.push.bind(buffers));
+        doc.on("end", () => resolve(Buffer.concat(buffers)));
+        doc.on("error", reject);
 
-    doc.on("data", buffers.push.bind(buffers));
-    doc.on("end", () => resolve(Buffer.concat(buffers)));
-    doc.on("error", reject);
-
-    // Title
-    doc.fontSize(20).text(`Purchase history for user ID: ${userId}`, {
+        // Title
+        doc.fontSize(20).text(`Purchase history for user ID: ${userId}`, {
         align: "center",
-    });
-    doc.moveDown(2);
+        });
+        doc.moveDown(2);
 
-    // Iterate purchase groups (standard, gift, additional_download))
-    for (const [type, purchases] of Object.entries(groupedPurchases)) {
-        doc
-            .fontSize(16)
-            .fillColor("black")
-            .text(`Purchase type: ${type}`, { underline: true });
+        // ---------- Standard purchases ----------
+        doc.fontSize(16).fillColor("black").text("Original downloads", { underline: true });
         doc.moveDown(0.5);
 
-        if (purchases.length === 0) {
-            doc.fontSize(12).fillColor("gray").text("No purchase in this category.");
-            doc.moveDown();
-            continue;
+        if (groupedPurchases.standard.length === 0) {
+            doc.fontSize(12).fillColor("gray").text("No standard purchases.");
+        } else {
+            groupedPurchases.standard.forEach((p) => {
+                const product = p.product as Product | undefined;
+                doc.fontSize(12).fillColor("black").text(
+                `• Product: ${product?.title ?? "N/A"} | Format: ${product?.format ?? "N/A"} | Year: ${product?.year ?? "N/A"}`
+                );
+            });
         }
-
-        purchases.forEach((p) => {
-            const product = p.product as Product | undefined;
-
-            doc.fontSize(12).fillColor("black").text(
-            `• Purchase #${p.idPurchase} - Product: ${
-                product?.title ?? "N/D"
-            } | Format: ${product?.format ?? "N/D"} | Anno: ${
-                product?.year ?? "N/D"
-            } | Date: ${p.createdAt.toLocaleDateString()}`
-            );
-
-            if (p.type === "gift" && p.recipientEmail) {
-                doc
-                    .fontSize(11)
-                    .fillColor("blue")
-                    .text(`   → Gifted to: ${p.recipientEmail}`);
-            }
-        });
-
         doc.moveDown();
-    }
 
-    doc.end();
-  });
+        // ---------- Gift purchases ----------
+        doc.fontSize(16).fillColor("black").text("Gifts", { underline: true });
+        doc.moveDown(0.5);
+
+        if (groupedPurchases.gift.length === 0) {
+            doc.fontSize(12).fillColor("gray").text("No gifts.");
+        } else {
+            groupedPurchases.gift.forEach((p) => {
+                const product = p.product as Product | undefined;
+                doc.fontSize(12).fillColor("black").text(
+                `• Product: ${product?.title ?? "N/A"} | Format: ${product?.format ?? "N/A"} | Year: ${product?.year ?? "N/A"}`
+                );
+                if (p.type === PurchaseType.GIFT && p.recipient) {
+                const recName = `${p.recipient.firstName ?? ""} ${p.recipient.lastName ?? ""}`.trim();
+                const recDisplay = recName || p.recipient.email || "recipient";
+                doc.fontSize(11).fillColor("blue").text(`   → Gifted to: ${recDisplay}`);
+                }
+            });
+        }
+        doc.moveDown();
+
+        // ---------- Additional downloads ----------
+        doc.fontSize(16).fillColor("black").text("Extra downloads", { underline: true });
+        doc.moveDown(0.5);
+
+        if (groupedPurchases.additional_download.length === 0) {
+            doc.fontSize(12).fillColor("gray").text("No extra downloads.");
+        } else {
+            groupedPurchases.additional_download.forEach((p) => {
+                const product = p.product as Product | undefined;
+                doc.fontSize(12).fillColor("black").text(
+                `• Product: ${product?.title ?? "N/A"} | Format: ${product?.format ?? "N/A"} | Year: ${product?.year ?? "N/A"}`
+                );
+            });
+        }
+        doc.moveDown();
+
+        // Close doc
+        doc.end();
+    });
 };
