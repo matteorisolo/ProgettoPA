@@ -15,12 +15,18 @@ export interface IPurchaseDetailsDTO {
 	recipient?: Omit<User, 'password'> | null;
 }
 
+export interface IPurchaseListAttributes{
+	type: PurchaseType;
+	product: Omit<Product, 'path'>;
+	recipient?: Omit<User, 'idUser, password, role, tokens' > | null;
+}
+
 export interface IPurchaseRepository {
 	getDetailsById(idPurchase: number): Promise<IPurchaseDetailsDTO>;
 	getUserHistory(
 		userId: number,
 		opts?: { type?: PurchaseType }
-	): Promise<IPurchaseDetailsDTO[]>;
+	): Promise<IPurchaseListAttributes[]>;
 	hasUserPurchasedProduct(userId: number, productId: number): Promise<boolean>;
 	productExists(productId: number): Promise<Product | null>;              
 }
@@ -47,7 +53,7 @@ class purchaseRepository implements IPurchaseRepository {
 	async getUserHistory(
 		userId: number,
 		opts?: { type?: PurchaseType }
-	): Promise<IPurchaseDetailsDTO[]> {
+	): Promise<IPurchaseListAttributes[]> {
 		const filters: any = { buyerId: userId };
 		if (opts?.type) filters.type = opts.type;
 
@@ -61,12 +67,19 @@ class purchaseRepository implements IPurchaseRepository {
 					p.recipientId ? userDao.getById(p.recipientId).catch(() => null) : Promise.resolve(null),
 				]);
 
+
 				return {
 					type: p.type,
-					product,
-					buyer: buyer as AppUser,
-					recipient: recipient as AppUser,
-				} as IPurchaseDetailsDTO;
+					product: { idProduct: product.idProduct,
+						title: product.title,
+						type: product.type,
+						year: product.year,
+						cost: product.cost,
+						format: product.format,},
+					recipient: {firstName: recipient?.firstName,
+						lastName: recipient?.lastName,
+						email: recipient?.email}
+				} as IPurchaseListAttributes;
 			})
 		);
 
