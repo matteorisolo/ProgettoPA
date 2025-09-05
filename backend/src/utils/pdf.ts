@@ -1,6 +1,8 @@
 import PDFDocument from "pdfkit";
 import { IPurchaseListAttributes } from "../repositories/purchaseRepository";
 import { PurchaseType } from "../enums/PurchaseType";
+import AuthService from "../services/authService";
+import { IUserAttributes } from "../models/appUser";
 
 interface IGroupedPurchases {
     standard: IPurchaseListAttributes[];
@@ -176,19 +178,21 @@ const drawTable = (opts: {
 };
 
 export const generatePDF = (userId: number, grouped: IGroupedPurchases) => {
-    return new Promise<Buffer>((resolve, reject) => {
+    return new Promise<Buffer>(async (resolve, reject) => {
     const doc = new PDFDocument({ margin: SIZES.pageMargin });
     const buffers: Buffer[] = [];
     doc.on("data", buffers.push.bind(buffers));
     doc.on("end", () => resolve(Buffer.concat(buffers)));
     doc.on("error", reject);
 
+    const buyer = await AuthService.getUserById(userId);
+
     //Title
     doc
       .fillColor("#B71C1C")
       .fontSize(SIZES.titleFont + 4)
       .font("Helvetica-Bold")
-      .text(`Purchase history for user ID: ${toStr(userId)}`, { align: "center" });
+      .text(`Purchase history for ${buyer.firstName} ${buyer.lastName}`, { align: "center" });
     doc.moveDown(1);
 
    // Reset to normal text style
