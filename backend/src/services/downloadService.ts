@@ -142,14 +142,18 @@ async function watermarkVideoMp4(
     const fontPath =
         process.env.FFMPEG_FONT_PATH || '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf';
 
+    // percentuale dell'altezza del video (es. 6%)
+    const videoScale = 0.06; // 6% default
+    const fontsizeExpr = `h*${videoScale}`; // drawtext supporta espressioni    
+
     await new Promise<void>((resolve, reject) => {
-        ffmpeg(inputPath)
+         ffmpeg(inputPath)
         .videoFilters([{
             filter: 'drawtext',
             options: {
             fontfile: fontPath,
             text,
-            fontsize: 24,
+            fontsize: fontsizeExpr,         
             fontcolor: 'white',
             box: 1, boxcolor: 'black@0.5', boxborderw: 10,
             x: '(w-text_w)/2', y: '(h-text_h)/2',
