@@ -2,7 +2,6 @@ import purchaseDao from '../dao/purchaseDao';
 import productDao from '../dao/productDao';
 import userDao from '../dao/userDao';
 import { PurchaseType } from '../enums/PurchaseType';
-import Purchase from '../models/purchase';
 import Product from '../models/product';
 import User from '../models/appUser';
 import { HttpError } from '../utils/errors/HttpError';
