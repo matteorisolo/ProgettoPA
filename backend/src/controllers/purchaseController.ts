@@ -30,7 +30,7 @@ export const purchaseProduct = async (req: Request, res: Response, next: NextFun
         for (let i = 0; i < productIds.length; i++) {
             const product = await purchaseRepository.productExists(productIds[i]);
             if (!product) {
-                throw HttpErrorFactory.createError(HttpErrorCodes.NotFound, `Product ${productIds[0]} not found.`);
+                throw HttpErrorFactory.createError(HttpErrorCodes.NotFound, `Product ${productIds[i]} not found.`);
             }
 
             // Check if a standard purchase already exists for this user and product
