@@ -17,8 +17,8 @@ export interface IDownloadDetailsDTO {
 export interface IDownloadRepository {
     getByUrlWithPurchase(downloadUrl: string): Promise<IDownloadDetailsDTO>;
     getByUrl(downloadUrl: string): Promise<Download | null>;
-    setUsedBuyerByUrl(downloadUrl: string, opts?: { transaction?: Transaction }): Promise<Download>;
-    setUsedRecipientByUrl(downloadUrl: string, opts?: { transaction?: Transaction }): Promise<Download>;
+    setUsedBuyerByUrl(downloadUrl: string, opts?: { transaction?: Transaction }): Promise<void>;
+    setUsedRecipientByUrl(downloadUrl: string, opts?: { transaction?: Transaction }): Promise<void>;
     setExpiration(
         idDownload: number,
         expiresAt: Date | null,
@@ -52,21 +52,21 @@ class DownloadRepository implements IDownloadRepository {
     async setUsedBuyerByUrl(
         downloadUrl: string,
         opts?: { transaction?: Transaction }
-    ): Promise<Download> {
+    ): Promise<void> {
         try {
-            const d = await this.getByUrl(downloadUrl); 
+            const downloads = await this.getAllByUrl(downloadUrl); 
 
-            if (!d) {
+            if (!downloads) {
                 throw HttpErrorFactory.createError(
                     HttpErrorCodes.NotFound,
                     `Download not found for url ${downloadUrl}.`
                 );
-            }   
+            }
 
-            d.usedBuyer = true; // Mark that the buyer has used the link
-            await d.save({ transaction: opts?.transaction });
-
-            return d;
+            for(const d of downloads) {
+                d.usedBuyer = true; // Mark that the recipient has used the link
+                await d.save({ transaction: opts?.transaction });
+            }
         } catch (err) {
             if (err instanceof HttpError) throw err;
             throw HttpErrorFactory.createError(
@@ -80,21 +80,21 @@ class DownloadRepository implements IDownloadRepository {
     async setUsedRecipientByUrl(
         downloadUrl: string,
         opts?: { transaction?: Transaction }
-    ): Promise<Download> {
+    ): Promise<void> {
         try {
-            const d = await this.getByUrl(downloadUrl); 
+            const downloads = await this.getAllByUrl(downloadUrl); 
 
-            if (!d) {
+            if (!downloads) {
                 throw HttpErrorFactory.createError(
                     HttpErrorCodes.NotFound,
                     `Download not found for url ${downloadUrl}.`
                 );
-            }   
+            }
 
-            d.usedRecipient = true; // Mark that the recipient has used the link
-            await d.save({ transaction: opts?.transaction });
-
-            return d;
+            for(const d of downloads) {
+                d.usedRecipient = true; // Mark that the buyer has used the link
+                await d.save({ transaction: opts?.transaction });
+            }
         } catch (err) {
             if (err instanceof HttpError) throw err;
             throw HttpErrorFactory.createError(
