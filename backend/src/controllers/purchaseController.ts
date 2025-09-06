@@ -71,7 +71,7 @@ export const purchaseProduct = async (req: Request, res: Response, next: NextFun
             // Create purchase record
             const purchaseData: IPurchaseCreationAttributes = {
                 buyerId: user.idUser,
-                productId: productId.idProduct,
+                productId: productId,
                 type: purchaseType,
                 recipientEmail: recipientEmail,
             };
