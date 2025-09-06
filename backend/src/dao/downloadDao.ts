@@ -11,6 +11,7 @@ import { HttpErrorCodes } from '../utils/errors/HttpErrorCodes';
 export interface IDownloadDAO extends DAO<IDownloadAttributes, number> {
     getByDownloadUrl(downloadUrl: string): Promise<Download>;
     getAllByPurchase(purchaseId: number): Promise<Download[]>;
+    updateDownloadUrl(downloadId: number, newDownloadUrl: string): Promise<void>;
 }
 
 class DownloadDao implements IDownloadDAO {
@@ -147,6 +148,39 @@ class DownloadDao implements IDownloadDAO {
             throw HttpErrorFactory.createError(
                 HttpErrorCodes.InternalServerError,
                 `Error retrieving downloads for purchase ${purchaseId}.`
+            );
+        }
+    }
+
+    //Update a download url
+    public async updateDownloadUrl(
+        downloadId: number,
+        newDownloadUrl: string,
+        options?: { transaction?: Transaction }
+    ): Promise<void> {
+        try {
+            const [rows, updated] = await Download.update(
+                { downloadUrl: newDownloadUrl } as Partial<IDownloadAttributes>,
+                {
+                    where: { idDownload: downloadId },
+                    returning: true,
+                    transaction: options?.transaction,
+                }   
+            );
+
+            if (rows === 0) {
+                throw HttpErrorFactory.createError(
+                    HttpErrorCodes.NotFound,
+                    `Download with ID ${downloadId} not found.`
+                );
+            }
+
+        
+    } catch (error) {
+        if (error instanceof HttpError) throw error;
+        throw HttpErrorFactory.createError(
+            HttpErrorCodes.InternalServerError,
+            `Error updating Download Url for download with ID ${downloadId}.`
             );
         }
     }

@@ -54,8 +54,9 @@ CREATE TABLE IF NOT EXISTS downloads (
     download_url UUID NOT NULL DEFAULT gen_random_uuid(), -- secure unique link
     used_buyer BOOLEAN NOT NULL DEFAULT FALSE,      -- track if buyer has used the link
     used_recipient BOOLEAN,                     -- track if recipient has used the link    
-    expires_at TIMESTAMP,        -- optional, link expiration
-    created_at TIMESTAMP DEFAULT NOW()
+    expires_at TIMESTAMP DEFAULT NULL,        -- optional, link expiration
+    created_at TIMESTAMP DEFAULT NOW(),
+    is_bundle BOOLEAN DEFAULT FALSE  -- to handle bundle purchases in future
 );
 
 -- =====================================

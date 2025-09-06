@@ -6,6 +6,7 @@ import Purchase from '../models/purchase';
 import { HttpError } from '../utils/errors/HttpError';
 import { HttpErrorFactory } from '../utils/errors/HttpErrorFactory';
 import { HttpErrorCodes } from '../utils/errors/HttpErrorCodes';
+import { IDownloadAttributes } from '../models/download';
 
 
 export interface IDownloadDetailsDTO {
@@ -26,6 +27,7 @@ export interface IDownloadRepository {
     listForUser(userId: number): Promise<IDownloadDetailsDTO[]>;
     listForPurchase(purchaseId: number): Promise<Download[]>;
     isExpired(downloadUrl: string): Promise<boolean>;
+    getAllByUrl(downloadUrl: string): Promise<Download[] | null> 
 }
 
 class DownloadRepository implements IDownloadRepository {
@@ -143,14 +145,26 @@ class DownloadRepository implements IDownloadRepository {
         return downloadDao.getAllByPurchase(purchaseId);
     }
 
-    
-
     // Check if a download link is expired based on its URL
     async isExpired(downloadUrl: string): Promise<boolean> {
         const download = await this.getByUrl(downloadUrl);
         if (!download?.expiresAt)
             return false;
         return new Date() > download.expiresAt; 
+    }
+
+    //Retrieve all downloads by URL
+    async getAllByUrl(downloadUrl: string): Promise<Download[] | null> {
+        const downloads = await Download.findAll({ where: { downloadUrl: downloadUrl } });
+        return downloads;
+        if (!downloads) {
+            return null;    
+        }
+    }
+
+    //Update DownloadUrl
+    async updateDownloadUrl(downloadId: number, newDownloadUrl: string): Promise<void> {
+        downloadDao.updateDownloadUrl(downloadId, newDownloadUrl);
     }
 
 }

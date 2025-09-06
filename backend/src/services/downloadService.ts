@@ -12,6 +12,7 @@ import downloadRepository from '../repositories/downloadRepository';
 import productDao from '../dao/productDao';
 import { FormatType } from '../enums/FormatType';
 import purchaseDao from '../dao/purchaseDao';
+import archiver from 'archiver';
 
 //Imagemagick for image processing
 const im = require('imagemagick');
@@ -186,13 +187,16 @@ export class DownloadService {
         input: IDownloadCreationAttributes,
         opts?: { transaction?: Transaction }
     ): Promise<ICreatedDownloadOutput> {
+        /*
         const payload: IDownloadCreationAttributes = {
         purchaseId: input.purchaseId,
         usedBuyer: false,       
-        expiresAt: null,      
+        expiresAt: null, 
+        isBundle: input.isBundle,     
         };
+        */
 
-        const created: Download = await downloadDao.create(payload, { transaction: opts?.transaction });
+        const created: Download = await downloadDao.create(input, { transaction: opts?.transaction });
 
         return {
         idDownload: created.idDownload,
@@ -206,28 +210,16 @@ export class DownloadService {
         isBuyer: boolean,
         format?: FormatType
     ): Promise<IPreparedDownloadFile> {
-        const dl = await downloadRepository.getByUrl(downloadUrl);
-        if (!dl) {
-                throw HttpErrorFactory.createError(
-                    HttpErrorCodes.NotFound,
-                    `Download not found for url ${downloadUrl}.`
-                );
-            }   
-        const purchase = await purchaseDao.getById(dl.purchaseId);
-        const product = await productDao.getById(purchase.productId);
-
-        const originalPath: string = product.path;     
-        const originalFmt: FormatType = product.format;
-
-        if (!originalPath || !fs.existsSync(originalPath)) {
+        const downloads = await downloadRepository.getAllByUrl(downloadUrl);
+        if (!downloads || downloads.length === 0) {
             throw HttpErrorFactory.createError(
-                HttpErrorCodes.InternalServerError,
-                'Original product file is missing on server.'
+                HttpErrorCodes.NotFound,
+                `Download not found for url ${downloadUrl}.`
             );
         }
 
         const requestedFmt = format ?? null;
-        const wmRaw = process.env.WATERMARK_TEXT || 'DIGITAL ASSET';
+        const wmRaw = process.env.WATERMARK_TEXT || 'DIGITAL PRODUCTS - Univpm';
 
         let prepared: IPreparedDownloadFile;
 
@@ -235,64 +227,163 @@ export class DownloadService {
         let fileName;
         let contentType;
 
-        
-        if (isImage(originalFmt)) {
-            if (requestedFmt && !isImage(requestedFmt)) {
-                throw HttpErrorFactory.createError(
-                    HttpErrorCodes.BadRequest,
-                    `Requested format '${requestedFmt}' is not valid for images.`
-                );
-            }
-            const out = await watermarkAndMaybeConvertImage(
-                originalPath,
-                originalFmt,
-                requestedFmt,
-                wmRaw
-            );
-            tmpPath = out.filePath; 
-            fileName = out.fileName; 
-            contentType = out.contentType;
-        } else if (isVideo(originalFmt)) {
-                if (requestedFmt && requestedFmt !== originalFmt) {
-                throw HttpErrorFactory.createError(
-                    HttpErrorCodes.BadRequest,
-                    'Changing video format is not supported.'
-                );
-            }
-            const out = await watermarkVideoMp4(originalPath, wmRaw);
-            tmpPath = out.filePath; 
-            fileName = out.fileName; 
-            contentType = out.contentType;
-        } else {
-            throw HttpErrorFactory.createError(
-                HttpErrorCodes.BadRequest,
-                'Unsupported product type.'
-            );
-        }
-        
+        const isBundle = downloads[0].isBundle;
 
-        //Consume one download use
-        const sequelize = Database.getInstance();
-        try {
-            await sequelize.transaction(async (t: Transaction) => {
+        if(!isBundle){
+            const dl= downloads[0];
+            const purchase = await purchaseDao.getById(dl.purchaseId);
+            const product = await productDao.getById(purchase.productId);
+
+            const originalPath: string = product.path;     
+            const originalFmt: FormatType = product.format;
+
+            if (!originalPath || !fs.existsSync(originalPath)) {
+                throw HttpErrorFactory.createError(
+                    HttpErrorCodes.InternalServerError,
+                    'Original product file is missing on server.'
+                );
+            }
+
+            if (isImage(originalFmt)) {
+                if (requestedFmt && !isImage(requestedFmt)) {
+                    throw HttpErrorFactory.createError(
+                        HttpErrorCodes.BadRequest,
+                        `Requested format '${requestedFmt}' is not valid for images.`
+                    );
+                }
+                const out = await watermarkAndMaybeConvertImage(
+                    originalPath,
+                    originalFmt,
+                    requestedFmt,
+                    wmRaw
+                );
+                tmpPath = out.filePath; 
+                fileName = out.fileName; 
+                contentType = out.contentType;
+            } else if (isVideo(originalFmt)) {
+                    if (requestedFmt && requestedFmt !== originalFmt) {
+                    throw HttpErrorFactory.createError(
+                        HttpErrorCodes.BadRequest,
+                        'Changing video format is not supported.'
+                    );
+                }
+                const out = await watermarkVideoMp4(originalPath, wmRaw);
+                tmpPath = out.filePath; 
+                fileName = out.fileName; 
+                contentType = out.contentType;
+            } else {
+                throw HttpErrorFactory.createError(
+                    HttpErrorCodes.BadRequest,
+                    'Unsupported product type.'
+                );
+            }
+            
+
+            //Consume one download use
+            const sequelize = Database.getInstance();
+            try {
+                await sequelize.transaction(async (t: Transaction) => {
+                    if (isBuyer) {
+                        await downloadRepository.setUsedBuyerByUrl(downloadUrl, { transaction: t });
+                    }else {
+                        await downloadRepository.setUsedRecipientByUrl(downloadUrl, { transaction: t });
+                    }
+                });
+            } catch (err) {
+                if (tmpPath && fs.existsSync(tmpPath)) fs.unlink(tmpPath, () => {});
+                throw HttpErrorFactory.createError(
+                        HttpErrorCodes.InternalServerError,
+                        'Failed to register download usage.'
+                    );
+            }
+            return prepared = {
+                filePath: tmpPath,
+                fileName: fileName,
+                contentType,
+            };
+        } else{
+            // Create a temporary ZIP path for the bundle
+            const tmpZipPath = path.join(TMP_DIR, `bundle-${Date.now()}.zip`);
+            const output = fs.createWriteStream(tmpZipPath);
+            const archive = archiver('zip', { zlib: { level: 9 } });
+
+            archive.pipe(output);
+
+            // Array to keep track of all temporary files for cleanup
+            const tmpFiles: string[] = []; 
+
+            // Iterate over each download in the bundle
+            for (const dl of downloads) {
+                const purchase = await purchaseDao.getById(dl.purchaseId);
+                const product = await productDao.getById(purchase.productId);
+                const originalPath: string = product.path;
+                const originalFmt: FormatType = product.format;
+
+                // Ensure the original file exists
+                if (!originalPath || !fs.existsSync(originalPath)) {
+                    throw HttpErrorFactory.createError(
+                        HttpErrorCodes.InternalServerError,
+                        'Original product file is missing on server.'
+                    );
+                }
+
+                let tmpFile: { filePath: string; fileName: string; contentType: string };
+
+                // Apply watermark and format conversion for images
+                if (isImage(originalFmt)) {
+                    tmpFile = await watermarkAndMaybeConvertImage(
+                        originalPath,
+                        originalFmt,
+                        format ?? null,
+                        process.env.WATERMARK_TEXT || 'DIGITAL PRODUCTS - Univpm'
+                    );
+                } 
+                 // Apply watermark for videos
+                else if (isVideo(originalFmt)) {
+                    tmpFile = await watermarkVideoMp4(
+                        originalPath,
+                        process.env.WATERMARK_TEXT || 'DIGITAL PRODUCTS - Univpm'
+                    );
+                } else {
+                    throw HttpErrorFactory.createError(
+                        HttpErrorCodes.BadRequest,
+                        'Unsupported product type in bundle.'
+                    );
+                }
+
+                // Add the temporary file to the ZIP archive
+                archive.file(tmpFile.filePath, { name: tmpFile.fileName });
+
+                // Add the temporary file path to the array for cleanup later
+                tmpFiles.push(tmpFile.filePath);
+            }
+
+            // Finalize the ZIP archive
+            await archive.finalize();
+
+            // Register download usage for all items in the bundle
+            const sequelize = Database.getInstance();
+            await sequelize.transaction(async (t) => {
                 if (isBuyer) {
                     await downloadRepository.setUsedBuyerByUrl(downloadUrl, { transaction: t });
-                }else {
+                } else {
                     await downloadRepository.setUsedRecipientByUrl(downloadUrl, { transaction: t });
                 }
             });
-        } catch (err) {
-            if (tmpPath && fs.existsSync(tmpPath)) fs.unlink(tmpPath, () => {});
-            throw HttpErrorFactory.createError(
-                    HttpErrorCodes.InternalServerError,
-                    'Failed to register download usage.'
-                );
+
+            // Cleanup: delete all temporary files created during watermarking
+            for (const f of tmpFiles) {
+                if (fs.existsSync(f)) fs.unlink(f, () => {});
+            }
+
+            // Return the final ZIP file
+            return {
+                filePath: tmpZipPath,
+                fileName: 'bundle.zip',
+                contentType: 'application/zip'
+            };
+
         }
-        return prepared = {
-            filePath: tmpPath,
-            fileName: fileName,
-            contentType,
-        };
     }
 }
 
