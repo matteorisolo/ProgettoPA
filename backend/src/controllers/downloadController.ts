@@ -40,13 +40,14 @@ export const getDownload = async (req: Request, res: Response, next: NextFunctio
         }
 
         // Determine if the authenticated user is the buyer or the gift recipient
-        const isBuyer = firstDownload.purchaseDetail.buyer.idUser === authUser.id;
-        const isGift = firstDownload.purchaseDetail.type === PurchaseType.GIFT;
+        const purchaseDetail = await purchaseRepository.getDetailsById(firstDownload.purchaseId);
+        const isBuyer = purchaseDetail.buyer.idUser === authUser.id;
+        const isGift = purchaseDetail.type === PurchaseType.GIFT;
         const isRecipient =
             isGift &&
             userEmail &&
-            !!firstDownload.purchaseDetail.recipient &&
-            userEmail === firstDownload.purchaseDetail.recipient.email;
+            !!purchaseDetail.recipient &&
+            userEmail === purchaseDetail.recipient.email;
         // Authorization check: ensure the user is either the buyer or the gift recipient
         if (!(isBuyer || isRecipient)) {
             throw HttpErrorFactory.createError(HttpErrorCodes.Forbidden, "You are not allowed to download this item.");
