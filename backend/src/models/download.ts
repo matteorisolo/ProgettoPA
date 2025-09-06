@@ -13,11 +13,12 @@ export interface IDownloadAttributes {
     usedRecipient?: boolean;
     expiresAt?: Date | null;
     createdAt: Date;
+    isBundle: boolean;
 }
 
 // Define creation attributes, making idDownload, timesUsed, expiresAt, and createdAt optional for creation (idDownload is auto-incremented, usedBuyer has a default value, 
-// userRecipient is optional, expiresAt is optional, createdAt has a default value)
-export interface IDownloadCreationAttributes extends Optional<IDownloadAttributes, 'idDownload' | 'downloadUrl' | 'usedBuyer' | 'usedRecipient' | 'expiresAt' | 'createdAt'> {}
+// userRecipient is optional, expiresAt is optional, createdAt has a default value, isBundle has a default value)
+export interface IDownloadCreationAttributes extends Optional<IDownloadAttributes, 'idDownload' | 'downloadUrl' | 'usedBuyer' | 'usedRecipient' | 'expiresAt' | 'createdAt' | 'isBundle'> {}
 
 class Download extends Model<IDownloadAttributes, IDownloadCreationAttributes> implements IDownloadAttributes {
     public idDownload!: number;
@@ -27,6 +28,7 @@ class Download extends Model<IDownloadAttributes, IDownloadCreationAttributes> i
     public usedRecipient?: boolean;
     public expiresAt?: Date | null;
     public createdAt!: Date;
+    public isBundle!: boolean;
 }
 
 // Initialize the Download sequelize model with its attributes and options
@@ -70,6 +72,12 @@ Download.init(
             allowNull: false,
             defaultValue: DataTypes.NOW,
             field: 'created_at',
+        },
+        isBundle: {
+            type: DataTypes.BOOLEAN,
+            allowNull: false,
+            defaultValue: false,
+            field: 'is_bundle',
         },
     },
     {

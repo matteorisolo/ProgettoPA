@@ -10,64 +10,71 @@ import { AuthService } from "../services/authService";
 import downloadRepository from "../repositories/downloadRepository";
 import fs from "fs";
 
-// Controller function to handle file download requests
+// Controller function to handle downloading a purchased asset
 export const getDownload = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        // Extract parameters from request
         const { downloadUrl } = req.params;
         const outputFormat = req.query.outputFormat as FormatType;
         const authUser = (req as RequestWithUser).user;
+        // Get the email of the authenticated user
+        const userEmail = (await AuthService.getUserById(authUser.id)).email;
 
-        // Retrieving and checking the download link
-        const download = await downloadRepository.getByUrl(downloadUrl);
-        if (!download) {
+        // Retrieve all downloads associated with the provided downloadUrl
+        const downloads = await downloadRepository.getAllByUrl(downloadUrl);
+        if (!downloads || downloads.length === 0) {
             throw HttpErrorFactory.createError(HttpErrorCodes.NotFound, "Download link not found.");
         }
 
-        // Check if the download link is expired or has been used up
+        // Since all downloads with the same URL share the same purchase details, we can check just the first one
+        const firstDownload = downloads[0];
+
+        // Check if the download link has expired
         if (await downloadRepository.isExpired(downloadUrl)) {
             throw HttpErrorFactory.createError(HttpErrorCodes.BadRequest, "Download link has expired.");
         }
 
-        // Retrieve purchase and product details associated with the download
-        const purchase = await purchaseRepository.getDetailsById(download.purchaseId);
-        if (!purchase || !purchase.product) {
-            throw HttpErrorFactory.createError(HttpErrorCodes.NotFound, "Purchase or product not found.");
+        for (const d of downloads) {
+            const purchaseDetail = await purchaseRepository.getDetailsById(d.purchaseId);
+            if (!purchaseDetail || !purchaseDetail.product)
+                throw HttpErrorFactory.createError(HttpErrorCodes.NotFound, "Purchase or product not found.");
         }
 
-        const userEmail = (await AuthService.getUserById(authUser.id)).email;
-        // isBuyer is true if the authenticated user is the buyer
-        const isBuyer = purchase.buyer.idUser === authUser.id;
-        const isGift = purchase.type === PurchaseType.GIFT;
-        // isRecipient is true if the purchase is a gift and the authenticated user matches the recipient email
+        // Determine if the authenticated user is the buyer or the gift recipient
+        const isBuyer = firstDownload.purchaseDetail.buyer.idUser === authUser.id;
+        const isGift = firstDownload.purchaseDetail.type === PurchaseType.GIFT;
         const isRecipient =
             isGift &&
             userEmail &&
-            !!purchase.recipient &&
-            userEmail === purchase.recipient.email;
+            !!firstDownload.purchaseDetail.recipient &&
+            userEmail === firstDownload.purchaseDetail.recipient.email;
         // Authorization check: ensure the user is either the buyer or the gift recipient
         if (!(isBuyer || isRecipient)) {
             throw HttpErrorFactory.createError(HttpErrorCodes.Forbidden, "You are not allowed to download this item.");
         }
 
-        if (isBuyer && download.usedBuyer)
+        // Check if the download link has already been used by this user (buyer or recipient)
+        if (isBuyer && firstDownload.usedBuyer)
             throw HttpErrorFactory.createError(HttpErrorCodes.BadRequest, "Download link already used for buyer.");
-        else if (isRecipient && download.usedRecipient)
+        else if (isRecipient && firstDownload.usedRecipient)
             throw HttpErrorFactory.createError(HttpErrorCodes.BadRequest, "Download link already used for recipient.");
 
-        // Process the download and convert format if necessary
-        const { filePath, fileName, contentType } = await DownloadService.processDownload(downloadUrl, isBuyer, outputFormat);
+        // Process the download (generate file or zip for bundles)
+        const { filePath, fileName, contentType } = await DownloadService.processDownload(
+            firstDownload.downloadUrl,
+            isBuyer,
+            outputFormat
+        );
 
-        // Send the file to the client and clean up
+        // Send the file or zip to the client and clean up
         res.setHeader('Content-Type', contentType);
         res.setHeader('Cache-Control', 'no-store');
         res.download(filePath, fileName, (err) => {
             if (filePath && fs.existsSync(filePath)) 
                 fs.unlink(filePath, () => {});
-            if (err) 
+            if (err)
                 return next(err);
         });
-    } 
+    }
     catch (err) {
         next(err);
     }

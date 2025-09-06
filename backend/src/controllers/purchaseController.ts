@@ -10,68 +10,109 @@ import purchaseRepository from "../repositories/purchaseRepository";
 import { IDownloadCreationAttributes } from "../models/download";
 import { DownloadService } from "../services/downloadService";
 import { generatePDF } from "../utils/pdf";
+import downloadRepository from "../repositories/downloadRepository";
 
 // Controller function to handle purchasing a product
 export const purchaseProduct = async (req: Request, res: Response, next: NextFunction) => {
     try {
         // Extract data from request
-        const { productId, recipientEmail } = req.body;
+        const { productIds, recipientEmail } = req.body;
+        // Determine if the purchase is a bundle (more than one product)
+        const isBundle = productIds.length > 1;
         // Get user info from request (added by authMiddleware)
         const idUser = (req as RequestWithUser).user.id;
+        const purchaseTypes: PurchaseType[] = [];
+        const purchasesResult: any[] = [];
+        let downloadUrl: string = '';
 
-        // Check if product to be purchased exists
-        const product = await purchaseRepository.productExists(productId);
-        if (!product) {
-            throw HttpErrorFactory.createError(HttpErrorCodes.NotFound, "Product not found.");
-        }
+        // Calculate total cost and validate products
+        let totalCost = 0;
+        for (let i = 0; i < productIds.length; i++) {
+            const product = await purchaseRepository.productExists(productIds[i]);
+            if (!product) {
+                throw HttpErrorFactory.createError(HttpErrorCodes.NotFound, "Product ${productId} not found.");
+            }
 
-        // Check if a standard purchase already exists for this user and product
-        let purchaseType = PurchaseType.STANDARD;
-        const existingPurchase = await purchaseRepository.hasUserPurchasedProduct(idUser, productId);
-        // If yes, set purchaseType to ADDITIONAL_DOWNLOAD, else to GIFT if recipientEmail is provided
-        if (existingPurchase && !recipientEmail) {
-            purchaseType = PurchaseType.ADDITIONAL_DOWNLOAD;
-        } 
-        else if (recipientEmail) {
-            purchaseType = PurchaseType.GIFT;
-        }
+            // Check if a standard purchase already exists for this user and product
+            let purchaseType = PurchaseType.STANDARD;
+            const existingPurchase = await purchaseRepository.hasUserPurchasedProduct(idUser, productIds[i]);
 
-        // Calculate cost based on purchase type
-        let cost = product.cost;
-        if (purchaseType === PurchaseType.ADDITIONAL_DOWNLOAD) {
-            cost = 1;   // Cost for additional download is 1 token
+            // If yes, set purchaseType to ADDITIONAL_DOWNLOAD, else to GIFT if recipientEmail is provided
+            if (existingPurchase && !recipientEmail) {
+                purchaseType = PurchaseType.ADDITIONAL_DOWNLOAD;
+            }
+            // If no existing purchase and recipientEmail is provided, it's a gift
+            else if (recipientEmail) {
+                purchaseType = PurchaseType.GIFT;
+            }
+
+            // Store the determined purchase type for this product (for later use)
+            purchaseTypes.push(purchaseType);
+
+            // Calculate cost based on purchase type
+            let cost = (purchaseType === PurchaseType.ADDITIONAL_DOWNLOAD) ? 1 : product.cost;
+            if (purchaseType === PurchaseType.GIFT) {
+                cost += 0.5; // Cost for gift is product cost + 0.5 token fee
+            }
+            totalCost += cost;
         }
 
         // Check if user has enough tokens to make the purchase
         const user = await AuthService.getUserById(idUser);
-        if (user.tokens < cost) {
+        if (user.tokens < totalCost) {
             throw HttpErrorFactory.createError(HttpErrorCodes.BadRequest, "Insufficient tokens for this purchase.");
         }
 
-        // Create the purchase record
-        const purchaseData: IPurchaseCreationAttributes = {
-            buyerId: user.idUser,
-            productId: product.idProduct,
-            type: purchaseType,
-            recipientEmail: recipientEmail || null,
-        };
-        const purchaseId = (await PurchaseService.createPurchase(purchaseData)).purchaseId;
+        // Cycle through products again to create purchases and downloads
+        for (let i = 0; i < productIds.length; i++) {
+            const productId = productIds[i];
+            const purchaseType = purchaseTypes[i];
 
-        // Create the download record associated with this purchase
-        const downloadData: IDownloadCreationAttributes = {
-            purchaseId: purchaseId,
-            usedBuyer: false,
-            usedRecipient: purchaseType === PurchaseType.GIFT ? false : undefined, // only set for gifts
-            expiresAt: null
-        };
-        const download = await DownloadService.createDownload(downloadData);
+            // Create purchase record
+            const purchaseData: IPurchaseCreationAttributes = {
+                buyerId: user.idUser,
+                productId: productId.idProduct,
+                type: purchaseType,
+                recipientEmail: recipientEmail,
+            };
+            const purchaseId = (await PurchaseService.createPurchase(purchaseData)).purchaseId;
+
+            // Create download record
+            const downloadData: IDownloadCreationAttributes = {
+                purchaseId: purchaseId,
+                usedBuyer: false,
+                usedRecipient: purchaseType === PurchaseType.GIFT ? false : undefined,
+                expiresAt: null,
+                isBundle: isBundle
+            };
+            const download = await DownloadService.createDownload(downloadData);
+            // For bundles, all downloads share the same downloadUrl
+            if (i === 0)
+                downloadUrl = download.downloadUrl;
+            // Update downloadUrl for non-first downloads in the bundle (no new UUID)
+            else
+                await downloadRepository.updateDownloadUrl(download.idDownload, downloadUrl);
+
+            // Prepare response data
+            purchasesResult.push({
+                purchaseId,
+                type: purchaseType,
+                productId,
+                recipientEmail,
+            });
+        }
 
         // Respond with success message and purchase details
         return res.status(201).json({
             message: "Purchase completed successfully",
-            purchaseId: purchaseId,
-            type: purchaseType,
-            downloadUrl: download.downloadUrl
+            totalCost: totalCost,
+            purchases: purchasesResult.map((p, index) => ({
+                purchaseId: p.purchaseId,
+                productId: p.productId,
+                type: p.type,
+                recipientEmail: p.recipientEmail,
+            })),
+            downloadUrl: downloadUrl
         });
     }
     // Pass any errors to the error handling middleware
