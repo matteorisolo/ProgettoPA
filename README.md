@@ -70,24 +70,24 @@ Il sistema adotta un'architettura **client-server** su più livelli:
 
 ```mermaid
 flowchart TD
-    subgraph UserLayer[👤 Utente]
+    subgraph UserLayer[Utente]
         A1[Richiesta HTTP / API] 
     end
 
-    subgraph APILayer[🌐 API Server (Express)]
+    subgraph APILayer[API Server (Express)]
         B1[Autenticazione JWT]
         B2[Validazione richieste]
         B3[Gestione rotte / controller]
     end
 
-    subgraph BackendLayer[⚙️ Backend (Node.js)]
+    subgraph BackendLayer[Backend (Node.js)]
         C1[Logica acquisto singolo/multiplo]
         C2[Applicazione filigrana]
         C3[Gestione download ZIP / link univoco]
         C4[Calcolo e controllo token]
     end
 
-    subgraph DBLayer[🗄️ Database (PostgreSQL + Sequelize)]
+    subgraph DBLayer[Database (PostgreSQL + Sequelize)]
         D1[Tabella utenti / crediti]
         D2[Tabella prodotti digitali]
         D3[Tabella acquisti / download]
