@@ -70,36 +70,33 @@ Il sistema adotta un'architettura **client-server** su più livelli:
 
 ```mermaid
 flowchart TD
-    subgraph UserLayer[Utente]
-        A1[Richiesta HTTP / API] 
-    end
+  %% Utente
+  A[🌐 Utente] -->|Richiesta HTTP (GET/POST)| B[API Server (Express)]
 
-    subgraph APILayer[API Server (Express)]
-        B1[Autenticazione JWT]
-        B2[Validazione richieste]
-        B3[Gestione rotte / controller]
-    end
+  %% API Server
+  subgraph B_layer[API Server (Express)]
+      B1[🔑 Autenticazione JWT]
+      B2[📝 Validazione richieste]
+      B3[📦 Rotte e Controller]
+  end
+  B --> B_layer
 
-    subgraph BackendLayer[Backend (Node.js)]
-        C1[Logica acquisto singolo/multiplo]
-        C2[Applicazione filigrana]
-        C3[Gestione download ZIP / link univoco]
-        C4[Calcolo e controllo token]
-    end
+  %% Backend
+  subgraph C_layer[Backend (Node.js + Services)]
+      C1[💾 Logica applicativa: acquisti, regali, token]
+      C2[🖼️ Gestione immagini/video + filigrana]
+      C3[📄 Generazione PDF e ZIP]
+  end
+  B_layer --> C_layer
 
-    subgraph DBLayer[Database (PostgreSQL + Sequelize)]
-        D1[Tabella utenti / crediti]
-        D2[Tabella prodotti digitali]
-        D3[Tabella acquisti / download]
-    end
+  %% Database
+  subgraph D_layer[Database (PostgreSQL via Sequelize)]
+      D1[🗄️ Persistenza beni digitali]
+      D2[🗄️ Storico acquisti e token]
+  end
+  C_layer --> D_layer
 
-    A1 --> B1
-    B1 --> B2
-    B2 --> B3
-    B3 --> C1
-    C1 --> C2
-    C2 --> C3
-    C3 --> D1
-    C3 --> D2
-    C3 --> D3
+  %% Risposta
+  D_layer -->|Risposta JSON o file| B_layer
+  B_layer -->|Risposta HTTP| A
 ```
