@@ -42,7 +42,7 @@ Il progetto è sviluppato in **TypeScript** utilizzando **Node.js, Express e Seq
 
 Per l'installazione e la configurazione del progetto è necessario avere installati [Docker](https://www.docker.com/) e [docker-compose](https://docs.docker.com/compose/).
 
-Successivamente, bisogna clonare la repository e avviare i servizi. Ecco i comandi da eseguire nel terminale:
+Successivamente, bisogna clonare il repository e avviare i servizi. Ecco i comandi da eseguire nel terminale:
 
 ```bash
 # Clona il repository
@@ -68,6 +68,7 @@ Una volta avviato, il sistema sarà disponibile all'indirizzo: http://127.0.0.1:
 
 Il sistema adotta un'architettura **client-server** su più livelli:
 
+```mermaid
 flowchart TD
     subgraph UserLayer[👤 Utente]
         A1[Richiesta HTTP / API] 
@@ -101,3 +102,4 @@ flowchart TD
     C3 --> D1
     C3 --> D2
     C3 --> D3
+```
