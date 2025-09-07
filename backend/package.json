@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "lint": "eslint 'src/**/*.{ts,js}'",
+    "lint": "eslint . --ext .ts,.js",
     "build": "tsc",
     "start": "node dist/server.js",
     "dev": "ts-node-dev src/server.ts"
@@ -13,6 +13,7 @@
   "license": "ISC",
   "description": "",
   "devDependencies": {
+    "@eslint/js": "^9.35.0",
     "@types/archiver": "^6.0.3",
     "@types/bcrypt": "^6.0.0",
     "@types/express": "^5.0.3",
@@ -21,8 +22,8 @@
     "@types/pdfkit": "^0.17.3",
     "@types/sequelize": "^4.28.20",
     "@types/uuid": "^10.0.0",
-    "@typescript-eslint/eslint-plugin": "^8.41.0",
-    "@typescript-eslint/parser": "^8.41.0",
+    "@typescript-eslint/eslint-plugin": "^8.42.0",
+    "@typescript-eslint/parser": "^8.42.0",
     "eslint": "^9.34.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.4",
@@ -32,7 +33,9 @@
     "typescript": "^5.9.2"
   },
   "dependencies": {
+    "@types/eslint": "^9.6.1",
     "@types/fluent-ffmpeg": "^2.1.27",
+    "@types/imagemagick": "^0.0.35",
     "@types/multer": "^2.0.0",
     "archiver": "^7.0.1",
     "bcrypt": "^6.0.0",

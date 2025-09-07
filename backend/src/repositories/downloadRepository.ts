@@ -6,7 +6,6 @@ import Purchase from '../models/purchase';
 import { HttpError } from '../utils/errors/HttpError';
 import { HttpErrorFactory } from '../utils/errors/HttpErrorFactory';
 import { HttpErrorCodes } from '../utils/errors/HttpErrorCodes';
-import { IDownloadAttributes } from '../models/download';
 
 
 export interface IDownloadDetailsDTO {

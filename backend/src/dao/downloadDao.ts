@@ -1,4 +1,4 @@
-import { Transaction, Op } from 'sequelize';
+import { Transaction } from 'sequelize';
 import { DAO } from './daoInterface';
 import Download, {
   IDownloadAttributes,
@@ -159,7 +159,7 @@ class DownloadDao implements IDownloadDAO {
         options?: { transaction?: Transaction }
     ): Promise<void> {
         try {
-            const [rows, updated] = await Download.update(
+            const [rows] = await Download.update(
                 { downloadUrl: newDownloadUrl } as Partial<IDownloadAttributes>,
                 {
                     where: { idDownload: downloadId },

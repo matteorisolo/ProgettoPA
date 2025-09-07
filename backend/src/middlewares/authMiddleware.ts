@@ -35,7 +35,7 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction) 
         next();
     } 
     // Handle token verification errors
-    catch (error: any) {
+    catch (error) {
         if (error instanceof jwt.TokenExpiredError)
             throw HttpErrorFactory.createError(HttpErrorCodes.TokenExpiredError, "Expired JWT token.");
         else if (error instanceof jwt.JsonWebTokenError) {

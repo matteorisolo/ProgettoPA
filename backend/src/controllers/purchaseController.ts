@@ -12,6 +12,13 @@ import { DownloadService } from "../services/downloadService";
 import { generatePDF } from "../utils/pdf";
 import downloadRepository from "../repositories/downloadRepository";
 
+export interface IPurchaseResult {
+    purchaseId: number,
+    type: PurchaseType,
+    productId: number,
+    recipientEmail: string
+}
+
 // Controller function to handle purchasing a product
 export const purchaseProduct = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -22,7 +29,7 @@ export const purchaseProduct = async (req: Request, res: Response, next: NextFun
         // Get user info from request (added by authMiddleware)
         const idUser = (req as RequestWithUser).user.id;
         const purchaseTypes: PurchaseType[] = [];
-        const purchasesResult: any[] = [];
+        const purchasesResult: IPurchaseResult[] = [];
         let downloadUrl: string = '';
 
         // Calculate total cost and validate products
@@ -106,7 +113,7 @@ export const purchaseProduct = async (req: Request, res: Response, next: NextFun
         return res.status(201).json({
             message: "Purchase completed successfully",
             totalCost: totalCost,
-            purchases: purchasesResult.map((p, index) => ({
+            purchases: purchasesResult.map((p) => ({
                 purchaseId: p.purchaseId,
                 productId: p.productId,
                 type: p.type,

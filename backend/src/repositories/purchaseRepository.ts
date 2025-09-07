@@ -51,17 +51,15 @@ class purchaseRepository implements IPurchaseRepository {
 
 	// Get purchase history for a user, optionally filtered by purchase type
 	async getUserHistory(
-		userId: number,
-		opts?: { type?: PurchaseType }
+		userId: number
 	): Promise<IPurchaseListAttributes[]> {
-		const filters: any = { buyerId: userId };
-		if (opts?.type) filters.type = opts.type;
+		const filters = { buyerId: userId };
 
 		const list = await purchaseDao.getByFilters(filters);
 
 		const results = await Promise.all(
 			list.map(async (p) => {
-				const [product, buyer, recipient] = await Promise.all([
+				const [product, , recipient] = await Promise.all([
 					productDao.getById(p.productId),
 					userDao.getById(p.buyerId),
 					p.recipientId ? userDao.getById(p.recipientId).catch(() => null) : Promise.resolve(null),

@@ -221,8 +221,6 @@ export class DownloadService {
         const requestedFmt = format ?? null;
         const wmRaw = process.env.WATERMARK_TEXT || 'DIGITAL PRODUCTS - Univpm';
 
-        let prepared: IPreparedDownloadFile;
-
         let tmpPath;
         let fileName;
         let contentType;
@@ -292,11 +290,11 @@ export class DownloadService {
             } catch (err) {
                 if (tmpPath && fs.existsSync(tmpPath)) fs.unlink(tmpPath, () => {});
                 throw HttpErrorFactory.createError(
-                        HttpErrorCodes.InternalServerError,
-                        'Failed to register download usage.'
-                    );
+                    HttpErrorCodes.InternalServerError,
+                    err instanceof Error ? err.message : 'Failed to register download usage.'
+                );
             }
-            return prepared = {
+            return {
                 filePath: tmpPath,
                 fileName: fileName,
                 contentType,

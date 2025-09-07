@@ -2,7 +2,6 @@ import PDFDocument from "pdfkit";
 import { IPurchaseListAttributes } from "../repositories/purchaseRepository";
 import { PurchaseType } from "../enums/PurchaseType";
 import AuthService from "../services/authService";
-import { IUserAttributes } from "../models/appUser";
 
 interface IGroupedPurchases {
     standard: IPurchaseListAttributes[];

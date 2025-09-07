@@ -41,7 +41,7 @@ export class PurchaseService {
                     'Recipient must be a registered user.'
                 );
             }
-            const recipientId = (recipientUser as any).idUser ?? recipientUser.idUser;
+            const recipientId = recipientUser.idUser ?? recipientUser.idUser;
 
             toCreate.recipientId = recipientId;
             toCreate.recipientEmail = email;
@@ -76,8 +76,8 @@ export class PurchaseService {
     }
 
     // Retrieve user purchase history with optional type filter
-    static async getUserHistory(userId: number, opts?: { type?: PurchaseType }) {
-        return await purchaseRepository.getUserHistory(userId, { type: opts?.type });
+    static async getUserHistory(userId: number) {
+        return await purchaseRepository.getUserHistory(userId);
     }
 }
 

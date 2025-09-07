@@ -1,6 +1,6 @@
 import { DAO } from './daoInterface';
 import Product, { IProductAttributes, IProductCreationAttributes } from '../models/product';
-import { Transaction, Op } from 'sequelize';
+import { Transaction } from 'sequelize';
 import { HttpErrorFactory } from '../utils/errors/HttpErrorFactory';
 import { HttpError } from '../utils/errors/HttpError';
 import { HttpErrorCodes } from '../utils/errors/HttpErrorCodes';
@@ -11,6 +11,12 @@ export interface IProductDAO extends DAO<IProductAttributes, number> {
 	getByYear(year: number): Promise<Product[]>;
 	getByFormat(format: string): Promise<Product[]>;
 	getByFilters(filters: { type?: string; year?: number; format?: string }): Promise<Product[]>;
+}
+
+export interface IFilters {
+	type: string,
+	year: number,
+	format: string
 }
 
 class ProductDao implements IProductDAO {
@@ -163,7 +169,7 @@ class ProductDao implements IProductDAO {
 	// Combined filters in AND: only the present fields are applied.
 	public async getByFilters(filters: { type?: string; year?: number; format?: string }): Promise<Product[]> {
 		try {
-			const where: any = {};
+			const where: Partial<IFilters> = {};
 			if (filters.type) where.type = filters.type;
 			if (typeof filters.year === 'number') where.year = filters.year;
 			if (filters.format) where.format = filters.format;

@@ -3,7 +3,7 @@ import Purchase, {
   IPurchaseAttributes,
   IPurchaseCreationAttributes, 
 } from '../models/purchase';
-import { Transaction, Op, WhereOptions } from 'sequelize';
+import { Transaction, WhereOptions } from 'sequelize';
 import { HttpErrorFactory } from '../utils/errors/HttpErrorFactory';
 import { HttpError } from '../utils/errors/HttpError';
 import { HttpErrorCodes } from '../utils/errors/HttpErrorCodes';
@@ -82,7 +82,7 @@ class PurchaseDao implements IPurchaseDAO {
         data: IPurchaseAttributes
     ): Promise<[number, Purchase[]]> {
         try {
-            const [rows, updated] = await Purchase.update(data as any, {
+            const [rows, updated] = await Purchase.update(data as IPurchaseAttributes, {
                 where: { idPurchase: id },
                 returning: true,
             });
@@ -211,19 +211,19 @@ class PurchaseDao implements IPurchaseDAO {
         recipientEmail?: string;
     }): Promise<Purchase[]> {
         try {
-            const where: import('sequelize').WhereOptions<IPurchaseAttributes> = {};
+            const where: WhereOptions<IPurchaseAttributes> = {};
 
             if (typeof filters.buyerId === 'number' && Number.isFinite(filters.buyerId)) {
-                (where as any).buyerId = filters.buyerId;
+                where.buyerId = filters.buyerId;
             }
             if (typeof filters.productId === 'number' && Number.isFinite(filters.productId)) {
-                (where as any).productId = filters.productId;
+                where.productId = filters.productId;
             }
             if (filters.type) {
-                (where as any).type = filters.type;
+                where.type = filters.type;
             }
             if (filters.recipientEmail && filters.recipientEmail.trim()) {
-                (where as any).recipientEmail = filters.recipientEmail.trim();
+                where.recipientEmail = filters.recipientEmail.trim();
             }
 
             return await Purchase.findAll({
