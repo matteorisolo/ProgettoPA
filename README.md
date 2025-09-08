@@ -899,3 +899,545 @@ sequenceDiagram
         Controller-->>Client: Error Response (400/401/403/404/500)
     end
 ```
+
+### Diagramma di Sequenza - Acquisto (POST /purchase)
+
+Il diagramma descrive il flusso di acquisto di uno o più beni (bundle) da parte di un utente autenticato, con eventuale regalo, e la generazione di un link di download univoco.
+
+1. **Client** invia una richiesta `POST /purchase` con token di autorizzazione e payload `{ productIds, recipientEmail? }`.
+2. La richiesta viene intercettata dal **Router Express**, che la inoltra ai middleware di **autenticazione** (verifica JWT) e **autorizzazione** (ruolo `USER`).
+3. Superati i controlli, il **middleware di validazione** verifica struttura e coerenza dei dati (array `productIds`, eventuale `recipientEmail`).
+4. Il **Controller** riceve la richiesta validata, estrae `userId`, `productIds` e l’eventuale `recipientEmail`, e avvia le verifiche preliminari:
+   * Per ogni `productId`, controlla che il prodotto esista;
+   * Determina il **tipo di acquisto** (`STANDARD`, `ADDITIONAL_DOWNLOAD`, `GIFT`) ed il **costo unitario** (1 token per `ADDITIONAL_DOWNLOAD`, sovrapprezzo +0.5 per `GIFT`).
+5. Il **Controller** richiede ad **AuthService** i dati utente per verificare il **saldo token**; se insufficiente rispetto al **costo totale** del carrello, viene restituito errore 400.
+6. In caso di saldo sufficiente, il **Controller** apre una **transazione Sequelize** e, per ciascun prodotto:
+   * usa **PurchaseService** per creare il record in `purchases` e aggiornare il saldo token;
+   * usa **DownloadService** per creare il record in `downloads` con `download_url` (UUID). Se è un **bundle**, il primo download genera l’URL e i successivi vengono allineati allo **stesso** `download_url` (campo `is_bundle = true`).
+7. Al termine, la transazione viene **committata**. Il **Controller** risponde con `201 Created`, includendo `totalCost`, l’elenco dei `purchases` e il `downloadUrl` (unico per l’eventuale bundle).
+
+```mermaid
+sequenceDiagram
+    participant Client as Client (Frontend)
+    participant Router as Express Router
+    participant Auth as authMiddleware
+    participant Authorize as authorize([UserRole.USER])
+    participant Validate as createPurchaseValidate
+    participant Controller as purchaseProduct Controller
+    participant AuthService as AuthService
+    participant PurchaseService as PurchaseService
+    participant PurchaseRepo as purchaseRepository
+    participant ProductDao as productDao
+    participant UserDao as userDao
+    participant PurchaseDao as purchaseDao
+    participant DownloadService as DownloadService
+    participant DownloadRepo as downloadRepository
+    participant DB as Database (PostgreSQL)
+    participant Sequelize as Sequelize Transaction
+
+    Client->>Router: POST /purchase<br>{productIds, recipientEmail?}<br>Authorization: Bearer <token>
+    activate Router
+    
+    Router->>Auth: authMiddleware
+    activate Auth
+    Auth->>Auth: Verify JWT token
+    Auth-->>Router: Add user payload to req.user
+    deactivate Auth
+    
+    Router->>Authorize: authorize([UserRole.USER])
+    activate Authorize
+    Authorize->>Authorize: Check if user.role === USER
+    Authorize-->>Router: Authorization OK
+    deactivate Authorize
+    
+    Router->>Validate: createPurchaseValidate
+    activate Validate
+    Validate->>Validate: Validate productIds array<br>Validate recipientEmail (optional)
+    Validate-->>Router: Validation OK
+    deactivate Validate
+    
+    Router->>Controller: purchaseProduct(req, res, next)
+    activate Controller
+    
+    Controller->>Controller: Destructure {productIds, recipientEmail}<br>Get user.id from req.user
+    
+    loop For each productId in productIds
+        Controller->>PurchaseRepo: productExists(productId)
+        activate PurchaseRepo
+        PurchaseRepo->>ProductDao: getById(productId)
+        activate ProductDao
+        ProductDao->>DB: SELECT * FROM products WHERE id_product = ?
+        activate DB
+        DB-->>ProductDao: Product or null
+        deactivate DB
+        ProductDao-->>PurchaseRepo: Product or null
+        deactivate ProductDao
+        PurchaseRepo-->>Controller: Product or null
+        deactivate PurchaseRepo
+        
+        alt Product not found
+            Controller->>Controller: Throw 404 Error
+        else Product exists
+            Controller->>PurchaseRepo: hasUserPurchasedProduct(userId, productId)
+            activate PurchaseRepo
+            PurchaseRepo->>PurchaseDao: getByBuyerAndProduct(userId, productId)
+            activate PurchaseDao
+            PurchaseDao->>DB: SELECT * FROM purchases<br>WHERE buyerId=? AND productId=?
+            activate DB
+            DB-->>PurchaseDao: Purchase or null
+            deactivate DB
+            PurchaseDao-->>PurchaseRepo: Purchase or null
+            deactivate PurchaseDao
+            PurchaseRepo-->>Controller: boolean (true/false)
+            deactivate PurchaseRepo
+            
+            Controller->>Controller: Determine purchaseType<br>(STANDARD/ADDITIONAL_DOWNLOAD/GIFT)
+            Controller->>Controller: Calculate cost for this product
+        end
+    end
+    
+    Controller->>AuthService: getUserById(userId)
+    activate AuthService
+    AuthService->>UserDao: getById(userId)
+    activate UserDao
+    UserDao->>DB: SELECT * FROM users WHERE id_user = ?
+    activate DB
+    DB-->>UserDao: User object
+    deactivate DB
+    UserDao-->>AuthService: User object
+    deactivate UserDao
+    AuthService-->>Controller: User object with tokens
+    deactivate AuthService
+    
+    alt Insufficient tokens
+        Controller->>Controller: Throw 400 Error
+    else Sufficient tokens
+        Controller->>Sequelize: Begin transaction
+        
+        loop For each productId in productIds
+            Controller->>PurchaseService: createPurchase(purchaseData)
+            activate PurchaseService
+            PurchaseService->>PurchaseService: Calculate final cost<br>Validate gift recipient
+            PurchaseService->>PurchaseDao: create(purchaseData, transaction)
+            activate PurchaseDao
+            PurchaseDao->>DB: INSERT INTO purchases<br>RETURNING id_purchase
+            activate DB
+            DB-->>PurchaseDao: New purchase ID
+            deactivate DB
+            PurchaseDao-->>PurchaseService: Purchase object
+            deactivate PurchaseDao
+            
+            PurchaseService->>UserDao: updateTokens(buyerId, newBalance, transaction)
+            activate UserDao
+            UserDao->>DB: UPDATE users SET tokens = ?<br>WHERE id_user = ?
+            activate DB
+            DB-->>UserDao: Rows updated
+            deactivate DB
+            UserDao-->>PurchaseService: Updated user
+            deactivate UserDao
+            
+            PurchaseService-->>Controller: purchaseId
+            deactivate PurchaseService
+            
+            Controller->>DownloadService: createDownload(downloadData)
+            activate DownloadService
+            DownloadService->>DownloadService: Generate downloadUrl (UUID)
+            DownloadService->>DownloadRepo: create(downloadData)
+            activate DownloadRepo
+            DownloadRepo->>DB: INSERT INTO downloads
+            activate DB
+            DB-->>DownloadRepo: New download
+            deactivate DB
+            DownloadRepo-->>DownloadService: Download object
+            deactivate DownloadRepo
+            DownloadService-->>Controller: Download object with downloadUrl
+            deactivate DownloadService
+            
+            alt Not first product in bundle
+                Controller->>DownloadRepo: updateDownloadUrl(downloadId, bundleUrl)
+                activate DownloadRepo
+                DownloadRepo->>DB: UPDATE downloads SET download_url = ?<br>WHERE id_download = ?
+                activate DB
+                DB-->>DownloadRepo: Rows updated
+                deactivate DB
+                DownloadRepo-->>Controller: Updated download
+                deactivate DownloadRepo
+            end
+        end
+        
+        Controller->>Sequelize: Commit transaction
+    end
+    
+    alt Success
+        Controller->>Controller: res.status(201).json({<br>message, totalCost,<br>purchases, downloadUrl<br>})
+        Controller-->>Client: 201 Created + purchase details
+    else Error
+        Controller->>Controller: next(error)
+        Controller-->>Client: Error Response
+    end
+    
+    deactivate Controller
+    deactivate Router
+
+```
+
+### Diagramma di Sequenza – Storico Acquisti (`GET /purchases`)
+
+Il diagramma illustra il flusso con cui un utente autenticato recupera lo storico dei propri acquisti, scegliendo il formato di output (JSON o PDF).
+
+1. **Client** invia una richiesta `GET /purchases?format=pdf/json` con token di autenticazione.  
+2. Il **Router Express** passa la richiesta al middleware di **autenticazione** (verifica JWT) e di **autorizzazione** (solo ruolo `USER`).  
+3. Il middleware di **validazione** controlla il parametro opzionale `format` (può essere `json` o `pdf`, altrimenti default `json`).  
+4. Il **Controller** estrae l’id utente dal token e inoltra la richiesta al **purchaseRepository** per ottenere lo storico acquisti.  
+5. Il **Repository** interroga i DAO per raccogliere i dati:  
+   - **PurchaseDao** recupera gli acquisti dal database,  
+   - per ogni acquisto viene arricchito il dettaglio prodotto tramite **ProductDao**,  
+   - se presente un destinatario regalo, viene caricato anche tramite **UserDao**.  
+6. Il Repository costruisce la lista di `IPurchaseListAttributes` e la restituisce al Controller.  
+7. Il **Controller** raggruppa gli acquisti per tipologia (`STANDARD`, `GIFT`, `ADDITIONAL_DOWNLOAD`).  
+8. In base al formato richiesto:  
+   - **JSON** (default): risposta `200 OK` con la lista raggruppata,  
+   - **PDF**: viene invocato il **PDF Generator**, che produce un file con lo storico, inviato come allegato nella risposta.  
+
+```mermaid
+sequenceDiagram
+    participant Client as Client (Frontend)
+    participant Router as Express Router
+    participant Auth as authMiddleware
+    participant Authorize as authorize([UserRole.USER])
+    participant Validate as getPurchasesValidate
+    participant Controller as getUserPurchases Controller
+    participant PurchaseRepo as purchaseRepository
+    participant PurchaseDao as purchaseDao
+    participant ProductDao as productDao
+    participant UserDao as userDao
+    participant DB as Database (PostgreSQL)
+    participant PDF as PDF Generator
+
+    Client->>Router: GET /purchases?format=pdf/json<br>Authorization: Bearer <token>
+    activate Router
+    
+    Router->>Auth: authMiddleware
+    activate Auth
+    Auth->>Auth: Verify JWT token
+    Auth-->>Router: Add user payload to req.user
+    deactivate Auth
+    
+    Router->>Authorize: authorize([UserRole.USER])
+    activate Authorize
+    Authorize->>Authorize: Check if user.role === USER
+    Authorize-->>Router: Authorization OK
+    deactivate Authorize
+    
+    Router->>Validate: getPurchasesValidate
+    activate Validate
+    Validate->>Validate: Validate format query parameter<br>(optional: 'json' or 'pdf')
+    Validate-->>Router: Validation OK
+    deactivate Validate
+    
+    Router->>Controller: getUserPurchases(req, res, next)
+    activate Controller
+    
+    Controller->>Controller: Get user.id from req.user<br>Get format from req.query (default 'json')
+    
+    Controller->>PurchaseRepo: getUserHistory(user.id)
+    activate PurchaseRepo
+    
+    PurchaseRepo->>PurchaseDao: getByFilters({ buyerId: userId })
+    activate PurchaseDao
+    PurchaseDao->>DB: SELECT * FROM purchases<br>WHERE buyerId = ?<br>ORDER BY createdAt DESC
+    activate DB
+    DB-->>PurchaseDao: List of purchases
+    deactivate DB
+    PurchaseDao-->>PurchaseRepo: Purchase[]
+    deactivate PurchaseDao
+    
+    loop For each purchase in list
+        PurchaseRepo->>ProductDao: getById(purchase.productId)
+        activate ProductDao
+        ProductDao->>DB: SELECT * FROM products WHERE id_product = ?
+        activate DB
+        DB-->>ProductDao: Product details
+        deactivate DB
+        ProductDao-->>PurchaseRepo: Product object
+        deactivate ProductDao
+        
+        alt purchase has recipientId
+            PurchaseRepo->>UserDao: getById(purchase.recipientId)
+            activate UserDao
+            UserDao->>DB: SELECT * FROM users WHERE id_user = ?
+            activate DB
+            DB-->>UserDao: User details
+            deactivate DB
+            UserDao-->>PurchaseRepo: User object (no password)
+            deactivate UserDao
+        else No recipientId
+            PurchaseRepo->>PurchaseRepo: recipient = null
+        end
+        
+        PurchaseRepo->>PurchaseRepo: Build IPurchaseListAttributes
+    end
+    
+    PurchaseRepo-->>Controller: IPurchaseListAttributes[]
+    deactivate PurchaseRepo
+    
+    Controller->>Controller: Group purchases by type<br>(STANDARD, GIFT, ADDITIONAL_DOWNLOAD)
+    
+    alt format === 'pdf'
+        Controller->>PDF: generatePDF(user.id, groupedPurchases)
+        activate PDF
+        PDF->>PDF: Create PDF buffer with purchase history
+        PDF-->>Controller: PDF buffer
+        deactivate PDF
+        
+        Controller->>Controller: Set PDF response headers
+        Controller->>Client: 200 OK + PDF attachment
+    else format === 'json' (default)
+        Controller->>Client: 200 OK + JSON grouped purchases
+    end
+    
+    deactivate Controller
+    deactivate Router
+```
+
+### Diagramma di Sequenza – Download Bene Digitale (`GET /downloads/:downloadUrl`)
+
+Il diagramma descrive il processo con cui un utente autenticato scarica un bene digitale precedentemente acquistato, eventualmente in formato bundle (ZIP) e con possibilità di conversione nel formato richiesto.
+
+1. **Client** invia una richiesta `GET /downloads/:downloadUrl?outputFormat=<format>` con token di autenticazione.  
+2. Il **Router Express** passa la richiesta ai middleware:  
+   - **authMiddleware**: verifica il token JWT e arricchisce la request con i dati utente,  
+   - **authorize([USER])**: controlla che l’utente abbia ruolo `USER`,  
+   - **downloadValidate**: valida `downloadUrl` (UUID) e `outputFormat` (opzionale).  
+3. Il **Controller** recupera i parametri e interroga l’**AuthService** per ottenere i dettagli dell’utente (inclusa l’email).  
+4. Tramite il **downloadRepository** si ottiene la lista dei download associati a quell’URL:  
+   - Se nessun record è trovato → errore `404 Not Found`,  
+   - Se il link è scaduto → errore `400 Bad Request`.  
+5. Per ogni download (singolo o bundle), il **purchaseRepository** ricostruisce i dettagli dell’acquisto: prodotto, buyer e, se presente, recipient del regalo.  
+6. Il Controller verifica che l’utente sia **autorizzato** (buyer o destinatario del regalo) e che non abbia già utilizzato quel download:  
+   - Se non autorizzato → errore `403 Forbidden`,  
+   - Se già usato → errore `400 Bad Request`.  
+7. Se autorizzato, la logica viene delegata al **DownloadService**:  
+   - **Caso singolo prodotto**: recupera i dettagli del file dal DB e dal file system; applica filigrana e conversione con **ImageMagick** (immagini) o **FFmpeg** (video).  
+   - **Caso bundle**: ogni file viene processato (filigrana + conversione) e infine compresso in un archivio con **Archiver (ZIP)**.  
+8. Il download viene **marcato come utilizzato** nel database, per evitare ulteriori accessi.  
+9. Il Controller invia al Client il file generato (immagine, video o ZIP) con intestazioni corrette, gestendo anche la pulizia dei file temporanei.  
+
+```mermaid
+sequenceDiagram
+    participant Client as Client (Frontend)
+    participant Router as Express Router
+    participant Auth as authMiddleware
+    participant Authorize as authorize([UserRole.USER])
+    participant Validate as downloadValidate
+    participant Controller as getDownload Controller
+    participant AuthService as AuthService
+    participant DownloadRepo as downloadRepository
+    participant PurchaseRepo as purchaseRepository
+    participant DownloadService as DownloadService
+    participant PurchaseDao as purchaseDao
+    participant ProductDao as productDao
+    participant DB as Database (PostgreSQL)
+    participant ImageMagick as ImageMagick
+    participant FFmpeg as FFmpeg
+    participant Archiver as Archiver (ZIP)
+    participant FileSystem as File System
+
+    Client->>Router: GET /downloads/:downloadUrl?outputFormat=<format><br>Authorization: Bearer <token>
+    activate Router
+    
+    Router->>Auth: authMiddleware
+    activate Auth
+    Auth->>Auth: Verify JWT token
+    Auth-->>Router: Add user payload to req.user
+    deactivate Auth
+    
+    Router->>Authorize: authorize([UserRole.USER])
+    activate Authorize
+    Authorize->>Authorize: Check if user.role === USER
+    Authorize-->>Router: Authorization OK
+    deactivate Authorize
+    
+    Router->>Validate: downloadValidate
+    activate Validate
+    Validate->>Validate: Validate downloadUrl (UUID)<br>Validate outputFormat (optional)
+    Validate-->>Router: Validation OK
+    deactivate Validate
+    
+    Router->>Controller: getDownload(req, res, next)
+    activate Controller
+    
+    Controller->>Controller: Extract downloadUrl from params<br>Extract outputFormat from query
+    
+    Controller->>AuthService: getUserById(authUser.id)
+    activate AuthService
+    AuthService->>DB: SELECT * FROM users WHERE id_user = ?
+    activate DB
+    DB-->>AuthService: User details with email
+    deactivate DB
+    AuthService-->>Controller: User email
+    deactivate AuthService
+    
+    Controller->>DownloadRepo: getAllByUrl(downloadUrl)
+    activate DownloadRepo
+    DownloadRepo->>DB: SELECT * FROM downloads WHERE download_url = ?
+    activate DB
+    DB-->>DownloadRepo: Download[] or empty
+    deactivate DB
+    DownloadRepo-->>Controller: Download[] or null
+    deactivate DownloadRepo
+    
+    alt No downloads found
+        Controller->>Controller: Throw 404 Error
+    else Downloads found
+        Controller->>DownloadRepo: isExpired(downloadUrl)
+        activate DownloadRepo
+        DownloadRepo->>DB: Check expiresAt for downloadUrl
+        activate DB
+        DB-->>DownloadRepo: expiresAt timestamp
+        deactivate DB
+        DownloadRepo-->>Controller: boolean (expired/not)
+        deactivate DownloadRepo
+        
+        alt Download expired
+            Controller->>Controller: Throw 400 Error
+        else Download valid
+            loop For each download in bundle
+                Controller->>PurchaseRepo: getDetailsById(download.purchaseId)
+                activate PurchaseRepo
+                PurchaseRepo->>PurchaseDao: getById(purchaseId)
+                activate PurchaseDao
+                PurchaseDao->>DB: SELECT * FROM purchases WHERE id_purchase = ?
+                activate DB
+                DB-->>PurchaseDao: Purchase details
+                deactivate DB
+                PurchaseDao-->>PurchaseRepo: Purchase object
+                deactivate PurchaseDao
+                
+                PurchaseRepo->>ProductDao: getById(purchase.productId)
+                activate ProductDao
+                ProductDao->>DB: SELECT * FROM products WHERE id_product = ?
+                activate DB
+                DB-->>ProductDao: Product details
+                deactivate DB
+                ProductDao-->>PurchaseRepo: Product object
+                deactivate ProductDao
+                
+                PurchaseRepo->>UserDao: getById(purchase.buyerId)
+                activate UserDao
+                UserDao->>DB: SELECT * FROM users WHERE id_user = ?
+                activate DB
+                DB-->>UserDao: Buyer details
+                deactivate DB
+                UserDao-->>PurchaseRepo: Buyer object
+                deactivate UserDao
+                
+                alt purchase has recipientId
+                    PurchaseRepo->>UserDao: getById(purchase.recipientId)
+                    activate UserDao
+                    UserDao->>DB: SELECT * FROM users WHERE id_user = ?
+                    activate DB
+                    DB-->>UserDao: Recipient details
+                    deactivate DB
+                    UserDao-->>PurchaseRepo: Recipient object
+                    deactivate UserDao
+                end
+                
+                PurchaseRepo-->>Controller: Purchase details with product, buyer, recipient
+                deactivate PurchaseRepo
+            end
+            
+            Controller->>Controller: Check user authorization<br>(isBuyer or isRecipient)
+            alt User not authorized
+                Controller->>Controller: Throw 403 Error
+            else User authorized
+                Controller->>Controller: Check if download already used<br>by this user
+                alt Download already used
+                    Controller->>Controller: Throw 400 Error
+                else Download available
+                    Controller->>DownloadService: processDownload(downloadUrl, isBuyer, outputFormat)
+                    activate DownloadService
+                    
+                    DownloadService->>DownloadRepo: getAllByUrl(downloadUrl)
+                    activate DownloadRepo
+                    DownloadRepo->>DB: Get all downloads with this URL
+                    activate DB
+                    DB-->>DownloadRepo: Download[]
+                    deactivate DB
+                    DownloadRepo-->>DownloadService: Download[]
+                    deactivate DownloadRepo
+                    
+                    alt Single product (not bundle)
+                        DownloadService->>PurchaseDao: getById(download.purchaseId)
+                        activate PurchaseDao
+                        PurchaseDao->>DB: Get purchase details
+                        activate DB
+                        DB-->>PurchaseDao: Purchase
+                        deactivate DB
+                        PurchaseDao-->>DownloadService: Purchase
+                        deactivate PurchaseDao
+                        
+                        DownloadService->>ProductDao: getById(purchase.productId)
+                        activate ProductDao
+                        ProductDao->>DB: Get product details
+                        activate DB
+                        DB-->>ProductDao: Product with file path
+                        deactivate DB
+                        ProductDao-->>DownloadService: Product
+                        deactivate ProductDao
+                        
+                        DownloadService->>FileSystem: Check if original file exists
+                        activate FileSystem
+                        FileSystem-->>DownloadService: File exists/not
+                        deactivate FileSystem
+                        
+                        alt Image file
+                            DownloadService->>ImageMagick: Watermark and convert image
+                            activate ImageMagick
+                            ImageMagick-->>DownloadService: Watermarked file path
+                            deactivate ImageMagick
+                        else Video file
+                            DownloadService->>FFmpeg: Watermark video
+                            activate FFmpeg
+                            FFmpeg-->>DownloadService: Watermarked video path
+                            deactivate FFmpeg
+                        end
+                        
+                        DownloadService->>DB: Transaction - mark download as used
+                        activate DB
+                        DB-->>DownloadService: Update successful
+                        deactivate DB
+                    else Bundle of products
+                        loop For each product in bundle
+                            DownloadService->>Process each product: Watermark images/videos
+                        end
+                        
+                        DownloadService->>Archiver: Create ZIP archive
+                        activate Archiver
+                        Archiver-->>DownloadService: ZIP file path
+                        deactivate Archiver
+                        
+                        DownloadService->>DB: Transaction - mark all bundle downloads as used
+                        activate DB
+                        DB-->>DownloadService: Update successful
+                        deactivate DB
+                    end
+                    
+                    DownloadService-->>Controller: {filePath, fileName, contentType}
+                    deactivate DownloadService
+                    
+                    Controller->>Client: Send file with appropriate headers
+                    Controller->>FileSystem: Cleanup temporary files (after send)
+                end
+            end
+        end
+    end
+    
+    alt Error occurred
+        Controller->>Controller: next(error)
+        Controller-->>Client: Error Response
+    end
+    
+    deactivate Controller
+    deactivate Router
+```
