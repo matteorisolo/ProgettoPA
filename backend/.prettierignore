@@ -1,0 +1,26 @@
+# Cartelle di build o output (se in futuro userai tsc --outDir)
+dist
+build
+
+# Node modules
+node_modules
+
+# Docker e altri artefatti
+docker-compose.yml
+Dockerfile
+
+# Config generici (non serve formattarli con Prettier)
+package-lock.json
+
+# Script SQL e database seed
+db/*.sql
+
+# Risorse binarie
+images
+backend/fonts
+
+# Collezioni Postman
+collection
+
+# File di ambiente
+.env

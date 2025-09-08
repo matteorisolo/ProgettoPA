@@ -27,7 +27,12 @@ app.use('/', downloadRoutes);
 
 // Middleware for handling 404 errors
 app.use((req, res, next) => {
-    next(HttpErrorFactory.createError(HttpErrorCodes.NotFound, "Resource not found."));
+  next(
+    HttpErrorFactory.createError(
+      HttpErrorCodes.NotFound,
+      'Resource not found.',
+    ),
+  );
 });
 
 // Generic error handling middleware

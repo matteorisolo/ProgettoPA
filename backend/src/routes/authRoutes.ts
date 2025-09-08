@@ -1,6 +1,6 @@
-import { Router } from "express";
-import { login } from "../controllers/authController";
-import { validateLogin } from "../middlewares/validators/authValidate";
+import { Router } from 'express';
+import { login } from '../controllers/authController';
+import { validateLogin } from '../middlewares/validators/authValidate';
 
 // Define the router
 const router = Router();

@@ -13,72 +13,72 @@ export interface IPurchaseCreatedOutput {
 }
 
 export class PurchaseService {
-    //Create a new purchase
-    static async createPurchase(input: IPurchaseCreationAttributes): Promise<IPurchaseCreatedOutput> {
-        const [user, product] = await Promise.all([
-            userDao.getById(input.buyerId),
-            productDao.getById(input.productId),
-        ]);
+  //Create a new purchase
+  static async createPurchase(
+    input: IPurchaseCreationAttributes,
+  ): Promise<IPurchaseCreatedOutput> {
+    const [user, product] = await Promise.all([
+      userDao.getById(input.buyerId),
+      productDao.getById(input.productId),
+    ]);
 
-    
-        let totalCost = product.cost;
-        const toCreate: IPurchaseCreationAttributes = {
-            buyerId: input.buyerId,
-            productId: input.productId,
-            type: input.type,
-            recipientId: null,
-            recipientEmail: null,
-        };
+    let totalCost = product.cost;
+    const toCreate: IPurchaseCreationAttributes = {
+      buyerId: input.buyerId,
+      productId: input.productId,
+      type: input.type,
+      recipientId: null,
+      recipientEmail: null,
+    };
 
-        if (input.type === PurchaseType.GIFT) {
-            totalCost = product.cost + 0.5;
+    if (input.type === PurchaseType.GIFT) {
+      totalCost = product.cost + 0.5;
 
-            const email = input.recipientEmail!.trim();
-            const recipientUser = await userDao.getByEmail(email);
-            if (!recipientUser) {
-                throw HttpErrorFactory.createError(
-                    HttpErrorCodes.BadRequest,
-                    'Recipient must be a registered user.'
-                );
-            }
-            const recipientId = recipientUser.idUser ?? recipientUser.idUser;
+      const email = input.recipientEmail!.trim();
+      const recipientUser = await userDao.getByEmail(email);
+      if (!recipientUser) {
+        throw HttpErrorFactory.createError(
+          HttpErrorCodes.BadRequest,
+          'Recipient must be a registered user.',
+        );
+      }
+      const recipientId = recipientUser.idUser ?? recipientUser.idUser;
 
-            toCreate.recipientId = recipientId;
-            toCreate.recipientEmail = email;
-        } 
-        else if (input.type === PurchaseType.STANDARD) {
-            totalCost = product.cost;
-        }
-        else if (input.type === PurchaseType.ADDITIONAL_DOWNLOAD) {
-            totalCost = 1;
-        }
-        else {
-            throw HttpErrorFactory.createError(
-                HttpErrorCodes.BadRequest,
-                `Unsupported purchase type: ${input.type}`
-            );
-        }
-
-        //Transaction: check user tokens, create purchase, update user tokens
-        const sequelize = Database.getInstance();
-        return await sequelize.transaction(async (t) => {
-            const purchase = await purchaseDao.create(toCreate, { transaction: t });
-
-            await userDao.updateTokens(input.buyerId, user.tokens - totalCost, { transaction: t });
-
-            return { purchaseId: purchase.idPurchase };
-        });
+      toCreate.recipientId = recipientId;
+      toCreate.recipientEmail = email;
+    } else if (input.type === PurchaseType.STANDARD) {
+      totalCost = product.cost;
+    } else if (input.type === PurchaseType.ADDITIONAL_DOWNLOAD) {
+      totalCost = 1;
+    } else {
+      throw HttpErrorFactory.createError(
+        HttpErrorCodes.BadRequest,
+        `Unsupported purchase type: ${input.type}`,
+      );
     }
 
-    // Retrieve purchase details by ID
-    static async getDetailsById(idPurchase: number) {
-        return await purchaseRepository.getDetailsById(idPurchase);
-    }
+    //Transaction: check user tokens, create purchase, update user tokens
+    const sequelize = Database.getInstance();
+    return await sequelize.transaction(async (t) => {
+      const purchase = await purchaseDao.create(toCreate, { transaction: t });
 
-    // Retrieve user purchase history with optional type filter
-    static async getUserHistory(userId: number) {
-        return await purchaseRepository.getUserHistory(userId);
-    }
+      await userDao.updateTokens(input.buyerId, user.tokens - totalCost, {
+        transaction: t,
+      });
+
+      return { purchaseId: purchase.idPurchase };
+    });
+  }
+
+  // Retrieve purchase details by ID
+  static async getDetailsById(idPurchase: number) {
+    return await purchaseRepository.getDetailsById(idPurchase);
+  }
+
+  // Retrieve user purchase history with optional type filter
+  static async getUserHistory(userId: number) {
+    return await purchaseRepository.getUserHistory(userId);
+  }
 }
 
 export default PurchaseService;

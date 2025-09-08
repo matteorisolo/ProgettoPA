@@ -6,7 +6,7 @@ CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 -- =====================================
 CREATE TYPE enum_users_role AS ENUM ('admin', 'user');
 CREATE TYPE enum_products_type AS ENUM ('manuscript', 'historical_cartography', 'photograph',
-                                    'painting', 'map', 'document', 'newspaper', 'book');
+                                    'painting', 'map', 'document', 'newspaper', 'book', 'historical_video');
 CREATE TYPE enum_purchases_type AS ENUM ('standard','gift','additional_download');
 CREATE TYPE enum_format_type AS ENUM ('jpg', 'png', 'mp4', 'tiff');
 
@@ -99,7 +99,7 @@ INSERT INTO users (first_name, last_name, email, password, role, tokens) VALUES
 INSERT INTO products (title, type, year, format, cost, path) VALUES
 ('Ancient Manuscript', 'manuscript', 1620, 'jpg', 5, '/usr/src/app/uploads/manuscript1620.jpg'),
 ('Historic Map', 'historical_cartography', 1780, 'png', 7, '/usr/src/app/uploads/map1780.png'),
-('Restoration Video', 'historical_cartography', 1900, 'mp4', 8, '/usr/src/app/uploads/restoration1900.mp4'),
+('Restoration Video', 'historical_video', 1900, 'mp4', 8, '/usr/src/app/uploads/restoration1900.mp4'),
 ('Old Photograph', 'photograph', 1925, 'jpg', 4, '/usr/src/app/uploads/photo1925.jpg'),
 ('Historic Newspaper', 'newspaper', 1912, 'png', 6, '/usr/src/app/uploads/newspaper1912.png'),
 ('World Map of 1492 High Resolution', 'historical_cartography', 1492, 'jpg', 25, '/usr/src/app/uploads/world_map_1492.jpg');
