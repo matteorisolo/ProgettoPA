@@ -306,10 +306,6 @@ flowchart TD
 
 ### DIagramma E-R
 
-## 🗂️ Diagramma E-R
-
-## 🗂️ Diagramma E-R
-
 Il diagramma E-R mostra la struttura dei dati principali del sistema e le relazioni tra di essi.
 
 - Gli **utenti** rappresentano le persone che utilizzano il sistema, con ruoli differenti (utente normale o amministratore). Gli utenti hanno un saldo di token che viene aggiornato in base agli acquisti e alle ricariche.
@@ -373,17 +369,15 @@ erDiagram
 
 ---
 
-### Pattern utilizzati
-
-## Pattern Utilizzati
+### Pattern Utilizzati
 
 Per garantire modularità, chiarezza e facilità di manutenzione, nel progetto sono stati adottati diversi design pattern. Di seguito quelli principali e i vantaggi apportati.
 
-### Singleton
+#### Singleton
 Alcuni servizi o configurazioni devono avere un’unica istanza condivisa in tutto il sistema.  
 Il pattern Singleton è stato utilizzato per garantire coerenza e accessibilità globale senza duplicare oggetti o configurazioni. Questo è il caso per esempio della classe *Database* per la connessione allo stesso che deve appunto essere unica (istanza di Sequelize).
 
-### Factory
+#### Factory
 Per la gestione centralizzata degli errori HTTP nel progetto è stato adottato il **pattern Factory**. L’idea principale è avere un’unica classe (la factory) che si occupa di **creare oggetti errore personalizzati** in base al contesto in cui si verifica l’errore.  
 
 In pratica, ogni volta che nel codice si incontra una situazione anomala (ad esempio un utente non autorizzato, un acquisto non trovato, o dati non validi), si chiama la factory fornendo:  
@@ -393,7 +387,7 @@ In pratica, ogni volta che nel codice si incontra una situazione anomala (ad ese
 
 La factory genera quindi un’istanza di errore HTTP coerente, con codice e messaggio corretti, che viene poi propagata attraverso i middleware di Express fino al client.
 
-### COR (Chain of Responsibility)
+#### COR (Chain of Responsibility)
 Il **pattern Chain of Responsibility (COR)** è stato implementato principalmente attraverso i middleware di Express. In questo pattern, ogni middleware rappresenta un "anello della catena" che può decidere di **gestire la richiesta** oppure di **passarla al middleware successivo**, permettendo così un flusso modulare e flessibile.
 
 Nel progetto, il COR è stato applicato ai seguenti casi:  
@@ -409,7 +403,7 @@ I principali vantaggi di questo approccio sono:
 
 In sintesi, il COR nei middleware consente di costruire una pipeline di controlli chiara, scalabile e facilmente manutenibile, adatta a gestire autenticazione, validazioni e errori in maniera coerente.
 
-### MVC (Model-View-Controller)
+#### MVC (Model-View-Controller)
 Il **pattern MVC (Model-View-Controller)** è stato implementato per organizzare l'applicazione in livelli distinti, migliorando chiarezza e manutenibilità.
 
 - **Modelli (Model)**: definiscono le entità principali del sistema come utenti, prodotti, acquisti e download. Grazie a Sequelize, i modelli gestiscono le relazioni e le regole di integrità dei dati, senza occuparsi della logica applicativa.  
@@ -424,13 +418,13 @@ Questo approccio consente di mantenere il codice:
 - **Estendibile**, perché nuove funzionalità possono essere aggiunte senza modificare componenti esistenti.  
 - **Sicuro e affidabile**, poiché la logica critica è isolata nei controller e nei servizi.
 
-### DAO (Data Access Object)
+#### DAO (Data Access Object)
 I DAO isolano le operazioni di accesso al database per ciascuna entità.  
 Vantaggi:
 - Migliorano testabilità e manutenzione.  
 - Permettono di cambiare la tecnologia sottostante senza alterare la logica applicativa.
 
-### Repository
+#### Repository
 I Repository aggregano più DAO e gestiscono logiche applicative più complesse come orchestrazione degli acquisti, gestione dei token o elaborazione dei regali.  
 Migliorano la leggibilità dei controller e mantengono la divisione dei compiti chiara.
 
@@ -900,7 +894,7 @@ sequenceDiagram
     end
 ```
 
-### Diagramma di Sequenza - Acquisto (POST /purchase)
+#### `POST /purchase` per l'acquisto di uno o più beni
 
 Il diagramma descrive il flusso di acquisto di uno o più beni (bundle) da parte di un utente autenticato, con eventuale regalo, e la generazione di un link di download univoco.
 
@@ -1081,7 +1075,7 @@ sequenceDiagram
 
 ```
 
-### Diagramma di Sequenza – Storico Acquisti (`GET /purchases`)
+#### `GET /purchases` per los storico acquisti
 
 Il diagramma illustra il flusso con cui un utente autenticato recupera lo storico dei propri acquisti, scegliendo il formato di output (JSON o PDF).
 
@@ -1200,7 +1194,7 @@ sequenceDiagram
     deactivate Router
 ```
 
-### Diagramma di Sequenza – Download Bene Digitale (`GET /downloads/:downloadUrl`)
+#### `GET /downloads/:downloadUrl` per il download di uno o più beni digitali
 
 Il diagramma descrive il processo con cui un utente autenticato scarica un bene digitale precedentemente acquistato, eventualmente in formato bundle (ZIP) e con possibilità di conversione nel formato richiesto.
 
