@@ -15,6 +15,11 @@ interface IUserDAO extends DAO<IUserAttributes, number> {
 
 // UserDao class implementing IUserDAO
 class UserDao implements IUserDAO {
+    /**
+     * Function to retrieve all users.
+     *
+     * @returns {Promise<User[]>} - A promise resolving with an array of users.
+     */
     public async getAll(): Promise<User[]> {
         try {
             return await User.findAll();
@@ -26,6 +31,12 @@ class UserDao implements IUserDAO {
         }
     }
 
+    /**
+     * Function to retrieve a user by its ID.
+     *
+     * @param id - The primary key ID of the user.
+     * @returns {Promise<User>} - A promise resolving with the user.
+     */
     public async getById(id: number): Promise<User> {
         try {
             const user = await User.findByPk(id);
@@ -45,6 +56,12 @@ class UserDao implements IUserDAO {
         }
     }
 
+    /**
+     * Function to retrieve a user by email.
+     *
+     * @param email - The email of the user.
+     * @returns {Promise<User | null>} - A promise resolving with the user or null if not found.
+     */
     public async getByEmail(email: string): Promise<User | null> {
         try {
             const user = await User.findOne({ where: { email } });
@@ -58,6 +75,13 @@ class UserDao implements IUserDAO {
         }
     }
 
+    /**
+     * Function to create a new user.
+     *
+     * @param user - The attributes required to create the user.
+     * @param options - Optional Sequelize transaction configuration.
+     * @returns {Promise<User>} - A promise resolving with the newly created user.
+     */
     public async create(
         user: IUserCreationAttributes,
         options?: { transaction?: Transaction },
@@ -72,6 +96,13 @@ class UserDao implements IUserDAO {
         }
     }
 
+    /**
+     * Function to update an existing user.
+     *
+     * @param id - The ID of the user to update.
+     * @param user - The attributes to update.
+     * @returns {Promise<[number, User[]]>} - A promise resolving with the number of updated rows and the updated users.
+     */
     public async update(
         id: number,
         user: IUserAttributes,
@@ -97,6 +128,13 @@ class UserDao implements IUserDAO {
         }
     }
 
+    /**
+     * Function to delete a user by its ID.
+     *
+     * @param id - The ID of the user to delete.
+     * @param options - Optional Sequelize transaction configuration.
+     * @returns {Promise<[number, User]>} - A promise resolving with the number of deleted rows and the deleted user.
+     */
     public async delete(
         id: number,
         options?: { transaction?: Transaction },
@@ -129,7 +167,14 @@ class UserDao implements IUserDAO {
         }
     }
 
-    // Update user's token balance
+    /**
+     * Function to update a user's token balance.
+     *
+     * @param id - The ID of the user to update.
+     * @param newTokens - The new token balance to set.
+     * @param options - Optional Sequelize transaction configuration.
+     * @returns {Promise<User>} - A promise resolving with the updated user.
+     */
     public async updateTokens(
         id: number,
         newTokens: number,

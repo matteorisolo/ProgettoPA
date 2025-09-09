@@ -3,12 +3,21 @@ import { IPurchaseListAttributes } from '../repositories/purchaseRepository';
 import { PurchaseType } from '../enums/PurchaseType';
 import AuthService from '../services/authService';
 
+/**
+ * Internal structure to group purchases by type:
+ * - standard purchases
+ * - gifts
+ * - additional downloads
+ */
 interface IGroupedPurchases {
     standard: IPurchaseListAttributes[];
     gift: IPurchaseListAttributes[];
     additional_download: IPurchaseListAttributes[];
 }
 
+/**
+ * Color palette used in the PDF for titles, headers, rows, and text.
+ */
 const COLORS = {
     title: '#0D47A1',
     headerBg: '#E3F2FD',
@@ -19,6 +28,9 @@ const COLORS = {
     subtle: '#666666',
 };
 
+/**
+ * Standardized sizes for margins, fonts, header height, row height, and cell padding.
+ */
 const SIZES = {
     pageMargin: 40,
     titleFont: 22,
@@ -33,11 +45,20 @@ const SIZES = {
 
 type Row = string[];
 
+/**
+ * Utility to safely convert a value to string, ensuring null/undefined are handled.
+ */
 const toStr = (v: unknown) => (v === null || v === undefined ? '' : String(v));
 
+/**
+ * Utility to clamp a numeric value, enforcing a minimum.
+ */
 const clamp = (n: number, min = 1) =>
     Number.isFinite(n) && n >= min ? n : min;
 
+/**
+ * Convert purchase type enum/string into a human-readable label.
+ */
 const humanType = (t: PurchaseType | string) => {
     switch (t) {
         case PurchaseType.STANDARD:
@@ -54,6 +75,10 @@ const humanType = (t: PurchaseType | string) => {
     }
 };
 
+/**
+ * Get recipient full name for gift purchases.
+ * Returns empty string otherwise.
+ */
 const recipientName = (p: IPurchaseListAttributes) => {
     if (p.type !== PurchaseType.GIFT || !p.recipient) return '';
     return [p.recipient.firstName, p.recipient.lastName]
@@ -62,11 +87,19 @@ const recipientName = (p: IPurchaseListAttributes) => {
         .trim();
 };
 
+/**
+ * Get recipient email for gift purchases.
+ * Returns empty string otherwise.
+ */
 const recipientEmail = (p: IPurchaseListAttributes) => {
     if (p.type !== PurchaseType.GIFT || !p.recipient?.email) return '';
     return p.recipient.email;
 };
 
+/**
+ * Draws a table into the PDF with headers and rows.
+ * Supports zebra striping, dynamic row height calculation, and page breaks.
+ */
 const drawTable = (opts: {
     doc: PDFKit.PDFDocument;
     x: number;
@@ -94,6 +127,7 @@ const drawTable = (opts: {
     const pageBottom = clamp(doc.page.height) - clamp(doc.page.margins.bottom);
     const totalW = colWidths.reduce((a, b) => a + b, 0);
 
+    // Draw table header row with background color and header line
     const drawHeader = () => {
         doc.save();
         doc.rect(x, cursorY, totalW, headH).fill(COLORS.headerBg);
@@ -120,6 +154,7 @@ const drawTable = (opts: {
         cursorY += headH;
     };
 
+    // Handle page break if not enough vertical space
     const needSpace = (needed: number) => {
         if (cursorY + needed > pageBottom) {
             doc.addPage();
@@ -130,7 +165,9 @@ const drawTable = (opts: {
 
     drawHeader();
 
+    // Render each row
     rows.forEach((row, idx) => {
+        // Calculate dynamic row height based on text size
         const cellHeights = row.map((val, i) => {
             const w = clamp(colWidths[i] - SIZES.cellPadX * 2, 8);
             doc.font('Helvetica').fontSize(SIZES.rowFont);
@@ -144,12 +181,14 @@ const drawTable = (opts: {
 
         needSpace(rowH);
 
+        // Apply zebra background for alternating rows
         if (zebra && idx % 2 === 0) {
             doc.save();
             doc.rect(x, cursorY, totalW, rowH).fill(COLORS.zebra);
             doc.restore();
         }
 
+        // Draw each cell's text
         doc.font('Helvetica').fontSize(SIZES.rowFont).fillColor(COLORS.text);
 
         let cx = x;
@@ -167,6 +206,7 @@ const drawTable = (opts: {
             cx += colWidths[i];
         });
 
+        // Draw line under the row
         doc.moveTo(x, cursorY + rowH)
             .lineTo(x + totalW, cursorY + rowH)
             .strokeColor(COLORS.rowLine)
@@ -179,6 +219,10 @@ const drawTable = (opts: {
     return cursorY;
 };
 
+/**
+ * Generates a PDF summarizing a user's purchase history.
+ * Purchases are grouped by type (standard, gifts, extra downloads).
+ */
 export const generatePDF = (userId: number, grouped: IGroupedPurchases) => {
     return new Promise<Buffer>(async (resolve, reject) => {
         const doc = new PDFDocument({ margin: SIZES.pageMargin });
@@ -187,9 +231,10 @@ export const generatePDF = (userId: number, grouped: IGroupedPurchases) => {
         doc.on('end', () => resolve(Buffer.concat(buffers)));
         doc.on('error', reject);
 
+        // Retrieve user information for the title
         const buyer = await AuthService.getUserById(userId);
 
-        //Title
+        // Document title with buyer's full name
         doc.fillColor('#B71C1C')
             .fontSize(SIZES.titleFont + 4)
             .font('Helvetica-Bold')
@@ -198,9 +243,10 @@ export const generatePDF = (userId: number, grouped: IGroupedPurchases) => {
             });
         doc.moveDown(1);
 
-        // Reset to normal text style
+        // Reset font style
         doc.font('Helvetica');
 
+        // Calculate column widths dynamically to fit page content
         const contentW =
             clamp(doc.page.width) -
             clamp(doc.page.margins.left) -
@@ -224,6 +270,7 @@ export const generatePDF = (userId: number, grouped: IGroupedPurchases) => {
             'Recipient email',
         ];
 
+        // Render each section of grouped purchases
         const section = (label: string, data: IPurchaseListAttributes[]) => {
             doc.x = startX;
             doc.fillColor(COLORS.title)
@@ -266,6 +313,7 @@ export const generatePDF = (userId: number, grouped: IGroupedPurchases) => {
             doc.y = newY + 14;
         };
 
+        // Sections for each type of purchase
         section('Original downloads', grouped.standard);
         section('Gifts', grouped.gift);
         section('Extra downloads', grouped.additional_download);

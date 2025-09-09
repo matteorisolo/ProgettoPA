@@ -14,9 +14,8 @@ import { FormatType } from '../enums/FormatType';
 import purchaseDao from '../dao/purchaseDao';
 import archiver from 'archiver';
 
-//Imagemagick for image processing
+// Imagemagick for image processing
 const im = require('imagemagick');
-//ConvertAsync in order to use async/await with imagemagick
 const convertAsync = promisify(im.convert);
 const identifyAsync = promisify(im.identify);
 
@@ -31,7 +30,7 @@ export interface ICreatedDownloadOutput {
     downloadUrl: string;
 }
 
-// Temporary directory in order to save watermarked files
+// Temporary directory for watermarked files
 const TMP_DIR = process.env.TMP_DIR || '/usr/src/app/tmp';
 if (!fs.existsSync(TMP_DIR)) fs.mkdirSync(TMP_DIR, { recursive: true });
 
@@ -39,17 +38,19 @@ function clamp(n: number, min: number, max: number) {
     return Math.max(min, Math.min(max, n));
 }
 
-// Functions for checking file types
+// Utility to check if format is an image
 function isImage(f: FormatType) {
     return (
         f === FormatType.JPG || f === FormatType.PNG || f === FormatType.TIFF
     );
 }
+
+// Utility to check if format is a video
 function isVideo(f: FormatType) {
     return f === FormatType.MP4;
 }
 
-// Function to get MIME type from format
+// Utility to get MIME type from format
 function mimeFromFormat(f: FormatType): string {
     switch (f) {
         case FormatType.JPG:
@@ -65,19 +66,27 @@ function mimeFromFormat(f: FormatType): string {
     }
 }
 
-// Function to build a temporary filename
+// Build temporary filename
 function buildTmpName(base: string, ext: string): string {
     return path.join(TMP_DIR, `${base}-${Date.now()}.${ext}`);
 }
 
-// Function to sanitize watermark text
+// Sanitize watermark text
 function safeWatermarkText(raw?: string): string {
     const def = process.env.WATERMARK_TEXT || 'DIGITAL PRODUCT';
     const s = (raw ?? def).trim();
     return s.replace(/:/g, '\\:').replace(/'/g, "\\'").replace(/"/g, '\\"');
 }
 
-//Watermark and possibly convert the file, returning path, filename and contentType
+/**
+ * Apply watermark and optional conversion to an image.
+ *
+ * @param inputPath - The path to the original image file.
+ * @param originalFmt - The original format of the image.
+ * @param requested - The requested format (or null to keep original).
+ * @param watermarkRawText - The text to apply as a watermark.
+ * @returns {Promise<{ filePath: string; fileName: string; contentType: string }>} - The processed image file details.
+ */
 async function watermarkAndMaybeConvertImage(
     inputPath: string,
     originalFmt: FormatType,
@@ -98,26 +107,24 @@ async function watermarkAndMaybeConvertImage(
     const base = path.basename(inputPath, path.extname(inputPath));
     const outPath = buildTmpName(base + '-wm', outFmt);
 
-    const meta: any = await identifyAsync(inputPath); // typical: { format, width, height, ... }
+    const meta: any = await identifyAsync(inputPath);
     const width: number = Number(meta.width);
     const height: number = Number(meta.height);
 
-    // 2) Calcolo dinamico della dimensione
-    const scale = Number(process.env.WM_SCALE ?? '0.08'); // 8% del lato minore (default)
-    const minPt = Number(process.env.WM_MIN_PT ?? '32'); // minimo
-    const maxPt = Number(process.env.WM_MAX_PT ?? '180'); // massimo
+    const scale = Number(process.env.WM_SCALE ?? '0.08');
+    const minPt = Number(process.env.WM_MIN_PT ?? '32');
+    const maxPt = Number(process.env.WM_MAX_PT ?? '180');
     const pointSize = clamp(
         Math.round(Math.min(width, height) * scale),
         minPt,
         maxPt,
     );
 
-    // ImageMagick command:
     const args = [
         inputPath,
         '(',
         '-background',
-        'none', // layer testo trasparente
+        'none',
         '-fill',
         '#FFFFFF',
         '-stroke',
@@ -128,15 +135,13 @@ async function watermarkAndMaybeConvertImage(
         fontPath,
         '-pointsize',
         String(pointSize),
-        // label:<testo> crea un'immagine con il testo senza occuparsi di coordinate
         `label:${watermarkText}`,
         ')',
-
         '-gravity',
-        'center', // centra il layer testo
+        'center',
         '-compose',
-        'over', // composizione normale
-        '-composite', // applica il layer testo sopra
+        'over',
+        '-composite',
         outPath,
     ];
     await convertAsync(args);
@@ -148,7 +153,13 @@ async function watermarkAndMaybeConvertImage(
     };
 }
 
-// Watermark video
+/**
+ * Apply watermark to a video (MP4).
+ *
+ * @param inputPath - The path to the original video file.
+ * @param watermarkRawText - The text to apply as a watermark.
+ * @returns {Promise<{ filePath: string; fileName: string; contentType: string }>} - The processed video file details.
+ */
 async function watermarkVideoMp4(
     inputPath: string,
     watermarkRawText: string,
@@ -161,9 +172,8 @@ async function watermarkVideoMp4(
         process.env.FFMPEG_FONT_PATH ||
         '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf';
 
-    // percentuale dell'altezza del video (es. 6%)
-    const videoScale = 0.06; // 6% default
-    const fontsizeExpr = `h*${videoScale}`; // drawtext supporta espressioni
+    const videoScale = 0.06;
+    const fontsizeExpr = `h*${videoScale}`;
 
     await new Promise<void>((resolve, reject) => {
         ffmpeg(inputPath)
@@ -204,20 +214,17 @@ export interface IPreparedDownloadFile {
 }
 
 export class DownloadService {
-    // Create a new download entry
+    /**
+     * Function to create a new download entry.
+     *
+     * @param input - The attributes required to create the download.
+     * @param opts - Optional Sequelize transaction configuration.
+     * @returns {Promise<ICreatedDownloadOutput>} - The created download information.
+     */
     static async createDownload(
         input: IDownloadCreationAttributes,
         opts?: { transaction?: Transaction },
     ): Promise<ICreatedDownloadOutput> {
-        /*
-        const payload: IDownloadCreationAttributes = {
-        purchaseId: input.purchaseId,
-        usedBuyer: false,       
-        expiresAt: null, 
-        isBundle: input.isBundle,     
-        };
-        */
-
         const created: Download = await downloadDao.create(input, {
             transaction: opts?.transaction,
         });
@@ -228,7 +235,15 @@ export class DownloadService {
         };
     }
 
-    // Process the download request: validate, watermark, increment usage, send file
+    /**
+     * Function to process a download request:
+     * validate, watermark, update usage, and return the prepared file.
+     *
+     * @param downloadUrl - The URL of the download.
+     * @param isBuyer - Whether the requester is the buyer (true) or recipient (false).
+     * @param format - The requested format (optional).
+     * @returns {Promise<IPreparedDownloadFile>} - The prepared file details.
+     */
     static async processDownload(
         downloadUrl: string,
         isBuyer: boolean,
@@ -307,16 +322,12 @@ export class DownloadService {
                     if (isBuyer) {
                         await downloadRepository.setUsedBuyerByUrl(
                             downloadUrl,
-                            {
-                                transaction: t,
-                            },
+                            { transaction: t },
                         );
                     } else {
                         await downloadRepository.setUsedRecipientByUrl(
                             downloadUrl,
-                            {
-                                transaction: t,
-                            },
+                            { transaction: t },
                         );
                     }
                 });
@@ -336,14 +347,13 @@ export class DownloadService {
                 contentType,
             };
         } else {
-            // Create a temporary ZIP path for the bundle
+            // Handle bundles (ZIP creation)
             const tmpZipPath = path.join(TMP_DIR, `bundle-${Date.now()}.zip`);
             const output = fs.createWriteStream(tmpZipPath);
             const archive = archiver('zip', { zlib: { level: 9 } });
 
             archive.pipe(output);
-
-            // Array to keep track of all temporary files for cleanup
+            // Array to keep track of all temporary files for cleanu
             const tmpFiles: string[] = [];
 
             // Iterate over each download in the bundle
@@ -367,7 +377,6 @@ export class DownloadService {
                     contentType: string;
                 };
 
-                // Apply watermark and format conversion for images
                 if (isImage(originalFmt)) {
                     tmpFile = await watermarkAndMaybeConvertImage(
                         originalPath,
@@ -376,9 +385,7 @@ export class DownloadService {
                         process.env.WATERMARK_TEXT ||
                             'DIGITAL PRODUCTS - Univpm',
                     );
-                }
-                // Apply watermark for videos
-                else if (isVideo(originalFmt)) {
+                } else if (isVideo(originalFmt)) {
                     tmpFile = await watermarkVideoMp4(
                         originalPath,
                         process.env.WATERMARK_TEXT ||
@@ -393,7 +400,6 @@ export class DownloadService {
 
                 // Add the temporary file to the ZIP archive
                 archive.file(tmpFile.filePath, { name: tmpFile.fileName });
-
                 // Add the temporary file path to the array for cleanup later
                 tmpFiles.push(tmpFile.filePath);
             }
@@ -409,12 +415,9 @@ export class DownloadService {
                         transaction: t,
                     });
                 } else {
-                    await downloadRepository.setUsedRecipientByUrl(
-                        downloadUrl,
-                        {
-                            transaction: t,
-                        },
-                    );
+                    await downloadRepository.setUsedRecipientByUrl(downloadUrl, {
+                        transaction: t,
+                    });
                 }
             });
 
@@ -423,7 +426,6 @@ export class DownloadService {
                 if (fs.existsSync(f)) fs.unlink(f, () => {});
             }
 
-            // Return the final ZIP file
             return {
                 filePath: tmpZipPath,
                 fileName: 'bundle.zip',

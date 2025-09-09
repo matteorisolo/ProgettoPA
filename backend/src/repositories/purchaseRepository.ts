@@ -35,6 +35,12 @@ export interface IPurchaseRepository {
 }
 
 class purchaseRepository implements IPurchaseRepository {
+    /**
+     * Function to retrieve detailed information about a purchase.
+     *
+     * @param idPurchase - The ID of the purchase.
+     * @returns {Promise<IPurchaseDetailsDTO>} - A promise resolving with the purchase details, including product, buyer, and optional recipient.
+     */
     async getDetailsById(idPurchase: number): Promise<IPurchaseDetailsDTO> {
         const p = await purchaseDao.getById(idPurchase);
 
@@ -54,7 +60,12 @@ class purchaseRepository implements IPurchaseRepository {
         };
     }
 
-    // Get purchase history for a user, optionally filtered by purchase type
+    /**
+     * Function to retrieve the purchase history for a user, optionally filtered by purchase type.
+     *
+     * @param userId - The ID of the user.
+     * @returns {Promise<IPurchaseListAttributes[]>} - A promise resolving with a list of purchases.
+     */
     async getUserHistory(userId: number): Promise<IPurchaseListAttributes[]> {
         const filters = { buyerId: userId };
 
@@ -92,7 +103,13 @@ class purchaseRepository implements IPurchaseRepository {
         return results;
     }
 
-    // Check if a user has purchased a specific product
+    /**
+     * Function to check if a user has purchased a specific product.
+     *
+     * @param userId - The ID of the user.
+     * @param productId - The ID of the product.
+     * @returns {Promise<boolean>} - True if the user has purchased the product, otherwise false.
+     */
     async hasUserPurchasedProduct(
         userId: number,
         productId: number,
@@ -104,7 +121,12 @@ class purchaseRepository implements IPurchaseRepository {
         return !!existing;
     }
 
-    // Check if a product exists by its ID and return the product or null
+    /**
+     * Function to check if a product exists by its ID.
+     *
+     * @param productId - The ID of the product.
+     * @returns {Promise<Product | null>} - The product if it exists, otherwise null.
+     */
     async productExists(productId: number): Promise<Product | null> {
         try {
             const product = await productDao.getById(productId);

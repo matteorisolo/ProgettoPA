@@ -27,7 +27,11 @@ export interface IFilters {
 }
 
 class ProductDao implements IProductDAO {
-    // Retrieve all products
+    /**
+     * Function to retrieve all products.
+     *
+     * @returns {Promise<Product[]>} - A promise resolving with an array of products.
+     */
     public async getAll(): Promise<Product[]> {
         try {
             return await Product.findAll();
@@ -39,7 +43,12 @@ class ProductDao implements IProductDAO {
         }
     }
 
-    // Retrieve a product by its primary key
+    /**
+     * Function to retrieve a product by its ID.
+     *
+     * @param id - The primary key ID of the product.
+     * @returns {Promise<Product>} - A promise resolving with the product.
+     */
     public async getById(id: number): Promise<Product> {
         try {
             const product = await Product.findByPk(id);
@@ -59,7 +68,13 @@ class ProductDao implements IProductDAO {
         }
     }
 
-    // Create a new product
+    /**
+     * Function to create a new product.
+     *
+     * @param product - The attributes required to create the product.
+     * @param options - Optional Sequelize transaction configuration.
+     * @returns {Promise<Product>} - A promise resolving with the newly created product.
+     */
     public async create(
         product: IProductCreationAttributes,
         options?: { transaction?: Transaction },
@@ -74,7 +89,13 @@ class ProductDao implements IProductDAO {
         }
     }
 
-    // Update an existing product
+    /**
+     * Function to update an existing product.
+     *
+     * @param id - The ID of the product to update.
+     * @param product - The attributes to update.
+     * @returns {Promise<[number, Product[]]>} - A promise resolving with the number of updated rows and the updated products.
+     */
     public async update(
         id: number,
         product: IProductAttributes,
@@ -100,7 +121,13 @@ class ProductDao implements IProductDAO {
         }
     }
 
-    // Delete a product by its ID
+    /**
+     * Function to delete a product by its ID.
+     *
+     * @param id - The ID of the product to delete.
+     * @param options - Optional Sequelize transaction configuration.
+     * @returns {Promise<[number, Product]>} - A promise resolving with the number of deleted rows and the deleted product.
+     */
     public async delete(
         id: number,
         options?: { transaction?: Transaction },
@@ -135,7 +162,12 @@ class ProductDao implements IProductDAO {
 
     // ------- Custom methods useful for the catalog -------
 
-    // Get all products by type
+    /**
+     * Function to retrieve products by type.
+     *
+     * @param type - The product type used as filter.
+     * @returns {Promise<Product[]>} - A promise resolving with an array of products.
+     */
     public async getByType(type: string): Promise<Product[]> {
         try {
             return await Product.findAll({ where: { type } });
@@ -148,7 +180,12 @@ class ProductDao implements IProductDAO {
         }
     }
 
-    // Get all products by year
+    /**
+     * Function to retrieve products by year.
+     *
+     * @param year - The production/publication year used as filter.
+     * @returns {Promise<Product[]>} - A promise resolving with an array of products.
+     */
     public async getByYear(year: number): Promise<Product[]> {
         try {
             return await Product.findAll({ where: { year } });
@@ -161,7 +198,12 @@ class ProductDao implements IProductDAO {
         }
     }
 
-    // Get all products by format
+    /**
+     * Function to retrieve products by format.
+     *
+     * @param format - The product format used as filter.
+     * @returns {Promise<Product[]>} - A promise resolving with an array of products.
+     */
     public async getByFormat(format: string): Promise<Product[]> {
         try {
             return await Product.findAll({ where: { format } });
@@ -174,7 +216,13 @@ class ProductDao implements IProductDAO {
         }
     }
 
-    // Combined filters in AND: only the present fields are applied.
+    /**
+     * Function to retrieve products by a combination of filters (AND).
+     * Only present fields are applied to the query.
+     *
+     * @param filters - The optional filters (type, year, format) to apply.
+     * @returns {Promise<Product[]>} - A promise resolving with an array of products.
+     */
     public async getByFilters(filters: {
         type?: string;
         year?: number;

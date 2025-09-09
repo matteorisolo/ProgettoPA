@@ -23,7 +23,12 @@ export interface IProductListFilters {
 }
 
 export class ProductService {
-    // Create a new product
+    /**
+     * Function to create a new product.
+     *
+     * @param input - The attributes required to create the product.
+     * @returns {Promise<ICreateProductInput>} - A promise resolving with the created product.
+     */
     static async createProduct(input: IProductCreationAttributes) {
         const created: ICreateProductInput = await productDao.create({
             title: input.title,
@@ -37,7 +42,13 @@ export class ProductService {
         return created;
     }
 
-    // Get a product by its ID
+    /**
+     * Function to retrieve a product by its ID.
+     *
+     * @param idProduct - The ID of the product to retrieve.
+     * @returns {Promise<any>} - A promise resolving with the product if found.
+     * @throws {HttpError} - Throws BadRequest if the ID is invalid, or NotFound if the product does not exist.
+     */
     static async getById(idProduct: number) {
         if (!Number.isFinite(idProduct)) {
             throw HttpErrorFactory.createError(
@@ -49,20 +60,23 @@ export class ProductService {
         return product;
     }
 
-    // List products with optional filters
+    /**
+     * Function to list products with optional filters.
+     * If no filters are provided, all products are returned.
+     *
+     * @param filters - Optional filters (type, year, format).
+     * @returns {Promise<any[]>} - A promise resolving with the list of products.
+     */
     static async list(filters: IProductListFilters = {}) {
-        // Check if any filter is provided
         const hasAnyFilter =
             typeof filters.type !== 'undefined' ||
             typeof filters.year !== 'undefined' ||
             typeof filters.format !== 'undefined';
 
-        // No filters -> return all
         if (!hasAnyFilter) {
             return await productDao.getAll();
         }
 
-        // With filters -> delegate to DAO smart query
         return await productDao.getByFilters({
             type: filters.type,
             year: typeof filters.year === 'number' ? filters.year : undefined,

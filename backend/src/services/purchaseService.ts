@@ -13,7 +13,15 @@ export interface IPurchaseCreatedOutput {
 }
 
 export class PurchaseService {
-    //Create a new purchase
+    /**
+     * Function to create a new purchase.
+     * Validates user, product, and recipient (if applicable), calculates cost,
+     * and performs a transaction to create the purchase and update user tokens.
+     *
+     * @param input - The attributes required to create a purchase.
+     * @returns {Promise<IPurchaseCreatedOutput>} - A promise resolving with the created purchase ID.
+     * @throws {HttpError} - Throws BadRequest for invalid input or unsupported type.
+     */
     static async createPurchase(
         input: IPurchaseCreationAttributes,
     ): Promise<IPurchaseCreatedOutput> {
@@ -57,7 +65,7 @@ export class PurchaseService {
             );
         }
 
-        //Transaction: check user tokens, create purchase, update user tokens
+        // Transaction: check user tokens, create purchase, update user tokens
         const sequelize = Database.getInstance();
         return await sequelize.transaction(async (t) => {
             const purchase = await purchaseDao.create(toCreate, {
@@ -72,12 +80,22 @@ export class PurchaseService {
         });
     }
 
-    // Retrieve purchase details by ID
+    /**
+     * Function to retrieve purchase details by ID.
+     *
+     * @param idPurchase - The ID of the purchase.
+     * @returns {Promise<any>} - A promise resolving with the purchase details.
+     */
     static async getDetailsById(idPurchase: number) {
         return await purchaseRepository.getDetailsById(idPurchase);
     }
 
-    // Retrieve user purchase history with optional type filter
+    /**
+     * Function to retrieve a user's purchase history.
+     *
+     * @param userId - The ID of the user.
+     * @returns {Promise<any[]>} - A promise resolving with the list of purchases.
+     */
     static async getUserHistory(userId: number) {
         return await purchaseRepository.getUserHistory(userId);
     }

@@ -7,7 +7,7 @@ import { IUserAttributes } from '../models/appUser';
 
 /**
  * DTO returned to the client after a successful login.
- * We explicitly avoid exposing sensitive fields such as `password`.
+ * Sensitive fields such as `password` are excluded.
  */
 export interface IAuthLoginResult {
     token: string;
@@ -18,6 +18,14 @@ export interface IAuthLoginResult {
 }
 
 export class AuthService {
+    /**
+     * Function to log in a user.
+     * Validates credentials and returns a signed JWT with user data (excluding sensitive fields).
+     *
+     * @param email - The user's email.
+     * @param password - The user's plaintext password to validate against the stored hash.
+     * @returns {Promise<IAuthLoginResult>} - A promise resolving with the authentication result.
+     */
     static async login(
         email: string,
         password: string,
@@ -61,7 +69,13 @@ export class AuthService {
         return result;
     }
 
-    // Retrieve user details by ID, excluding sensitive fields.
+    /**
+     * Function to retrieve user details by ID, excluding sensitive fields.
+     *
+     * @param idUser - The ID of the user to retrieve.
+     * @returns {Promise<Pick<IUserAttributes, 'idUser' | 'firstName' | 'lastName' | 'email' | 'role' | 'tokens'>>}
+     * - A promise resolving with the user details.
+     */
     static async getUserById(
         idUser: number,
     ): Promise<
@@ -89,7 +103,14 @@ export class AuthService {
         };
     }
 
-    // Update user tokens balance by adding the specified amount.
+    /**
+     * Function to update the token balance of a user.
+     * Adds the specified amount to the user's current tokens.
+     *
+     * @param idUser - The ID of the user whose tokens are updated.
+     * @param amount - The amount of tokens to add (can be positive or negative).
+     * @returns {Promise<number>} - A promise resolving with the new token balance.
+     */
     static async updateTokens(idUser: number, amount: number): Promise<number> {
         const user = await userDao.getById(idUser);
 

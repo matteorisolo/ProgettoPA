@@ -28,7 +28,11 @@ export interface IPurchaseDAO extends DAO<IPurchaseAttributes, number> {
 }
 
 class PurchaseDao implements IPurchaseDAO {
-    // Retrieve all purchases
+    /**
+     * Function to retrieve all purchases ordered by creation date (descending).
+     *
+     * @returns {Promise<Purchase[]>} - A promise resolving with an array of purchases.
+     */
     public async getAll(): Promise<Purchase[]> {
         try {
             return await Purchase.findAll({ order: [['createdAt', 'DESC']] });
@@ -40,7 +44,12 @@ class PurchaseDao implements IPurchaseDAO {
         }
     }
 
-    // Retrieve a purchase by its primary key
+    /**
+     * Function to retrieve a purchase by its ID.
+     *
+     * @param id - The primary key ID of the purchase.
+     * @returns {Promise<Purchase>} - A promise resolving with the purchase.
+     */
     public async getById(id: number): Promise<Purchase> {
         try {
             const purchase = await Purchase.findByPk(id);
@@ -60,7 +69,13 @@ class PurchaseDao implements IPurchaseDAO {
         }
     }
 
-    // Create a new purchase
+    /**
+     * Function to create a new purchase.
+     *
+     * @param data - The attributes required to create the purchase.
+     * @param options - Optional Sequelize transaction configuration.
+     * @returns {Promise<Purchase>} - A promise resolving with the newly created purchase.
+     */
     public async create(
         data: IPurchaseCreationAttributes,
         options?: { transaction?: Transaction },
@@ -75,7 +90,13 @@ class PurchaseDao implements IPurchaseDAO {
         }
     }
 
-    // Update an existing purchase
+    /**
+     * Function to update an existing purchase.
+     *
+     * @param id - The ID of the purchase to update.
+     * @param data - The attributes to update.
+     * @returns {Promise<[number, Purchase[]]>} - A promise resolving with the number of updated rows and the updated purchases.
+     */
     public async update(
         id: number,
         data: IPurchaseAttributes,
@@ -104,7 +125,13 @@ class PurchaseDao implements IPurchaseDAO {
         }
     }
 
-    // Delete a purchase by its ID
+    /**
+     * Function to delete a purchase by its ID.
+     *
+     * @param id - The ID of the purchase to delete.
+     * @param options - Optional Sequelize transaction configuration.
+     * @returns {Promise<[number, Purchase]>} - A promise resolving with the number of deleted rows and the deleted purchase.
+     */
     public async delete(
         id: number,
         options?: { transaction?: Transaction },
@@ -139,7 +166,12 @@ class PurchaseDao implements IPurchaseDAO {
 
     // ------- Custom methods useful for the catalog -------
 
-    // Retrieve purchases by buyer ID
+    /**
+     * Function to retrieve purchases by buyer ID.
+     *
+     * @param buyerId - The ID of the buyer.
+     * @returns {Promise<Purchase[]>} - A promise resolving with an array of purchases.
+     */
     public async getByBuyer(buyerId: number): Promise<Purchase[]> {
         try {
             return await Purchase.findAll({
@@ -155,7 +187,12 @@ class PurchaseDao implements IPurchaseDAO {
         }
     }
 
-    // Retrieve purchases by product ID
+    /**
+     * Function to retrieve purchases by product ID.
+     *
+     * @param productId - The ID of the product.
+     * @returns {Promise<Purchase[]>} - A promise resolving with an array of purchases.
+     */
     public async getByProduct(productId: number): Promise<Purchase[]> {
         try {
             return await Purchase.findAll({
@@ -171,7 +208,12 @@ class PurchaseDao implements IPurchaseDAO {
         }
     }
 
-    // Retrieve purchases by type
+    /**
+     * Function to retrieve purchases by type.
+     *
+     * @param type - The purchase type.
+     * @returns {Promise<Purchase[]>} - A promise resolving with an array of purchases.
+     */
     public async getByType(type: PurchaseType): Promise<Purchase[]> {
         try {
             return await Purchase.findAll({
@@ -187,7 +229,13 @@ class PurchaseDao implements IPurchaseDAO {
         }
     }
 
-    // Retrieve a purchase by buyer ID and product ID
+    /**
+     * Function to retrieve a purchase by buyer ID and product ID.
+     *
+     * @param buyerId - The ID of the buyer.
+     * @param productId - The ID of the product.
+     * @returns {Promise<Purchase | null>} - A promise resolving with the purchase or null if not found.
+     */
     public async getByBuyerAndProduct(
         buyerId: number,
         productId: number,
@@ -204,7 +252,12 @@ class PurchaseDao implements IPurchaseDAO {
         }
     }
 
-    // Retrieve purchases by various optional filters
+    /**
+     * Function to retrieve purchases using optional filters.
+     *
+     * @param filters - The filters to apply (buyerId, productId, type, recipientEmail).
+     * @returns {Promise<Purchase[]>} - A promise resolving with an array of purchases.
+     */
     public async getByFilters(filters: {
         buyerId?: number;
         productId?: number;
@@ -248,3 +301,4 @@ class PurchaseDao implements IPurchaseDAO {
 }
 
 export default new PurchaseDao();
+

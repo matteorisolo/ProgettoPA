@@ -8,7 +8,6 @@ import { HttpErrorFactory } from '../utils/errors/HttpErrorFactory';
 import { HttpError } from '../utils/errors/HttpError';
 import { HttpErrorCodes } from '../utils/errors/HttpErrorCodes';
 
-
 export interface IDownloadDAO extends DAO<IDownloadAttributes, number> {
     getByDownloadUrl(downloadUrl: string): Promise<Download>;
     getAllByPurchase(purchaseId: number): Promise<Download[]>;
@@ -19,7 +18,11 @@ export interface IDownloadDAO extends DAO<IDownloadAttributes, number> {
 }
 
 class DownloadDao implements IDownloadDAO {
-    // Retrieve all downloads
+    /**
+     * Function to retrieve all downloads.
+     *
+     * @returns {Promise<Download[]>} - A promise resolving with an array of downloads.
+     */
     public async getAll(): Promise<Download[]> {
         try {
             return await Download.findAll();
@@ -31,7 +34,12 @@ class DownloadDao implements IDownloadDAO {
         }
     }
 
-    // Retrieve a download by its primary key
+    /**
+     * Function to retrieve a download by its ID.
+     *
+     * @param id - The primary key ID of the download.
+     * @returns {Promise<Download>} - A promise resolving with the download.
+     */
     public async getById(id: number): Promise<Download> {
         try {
             const d = await Download.findByPk(id);
@@ -51,7 +59,13 @@ class DownloadDao implements IDownloadDAO {
         }
     }
 
-    // Create a new download
+    /**
+     * Function to create a new download.
+     *
+     * @param data - The attributes required to create the download.
+     * @param options - Optional Sequelize transaction configuration.
+     * @returns {Promise<Download>} - A promise resolving with the newly created download.
+     */
     public async create(
         data: IDownloadCreationAttributes,
         options?: { transaction?: Transaction },
@@ -66,7 +80,13 @@ class DownloadDao implements IDownloadDAO {
         }
     }
 
-    // Update an existing download
+    /**
+     * Function to update an existing download.
+     *
+     * @param id - The ID of the download to update.
+     * @param data - The attributes to update.
+     * @returns {Promise<[number, Download[]]>} - A promise resolving with the number of updated rows and the updated downloads.
+     */
     public async update(
         id: number,
         data: IDownloadAttributes,
@@ -92,7 +112,13 @@ class DownloadDao implements IDownloadDAO {
         }
     }
 
-    // Delete a download by its primary key
+    /**
+     * Function to delete a download by its ID.
+     *
+     * @param id - The ID of the download to delete.
+     * @param options - Optional Sequelize transaction configuration.
+     * @returns {Promise<[number, Download]>} - A promise resolving with the number of deleted rows and the deleted download.
+     */
     public async delete(
         id: number,
         options?: { transaction?: Transaction },
@@ -125,7 +151,12 @@ class DownloadDao implements IDownloadDAO {
         }
     }
 
-    // Retrieve a download by its unique downloadUrl
+    /**
+     * Function to retrieve a download by its unique download URL.
+     *
+     * @param downloadUrl - The unique URL of the download.
+     * @returns {Promise<Download>} - A promise resolving with the download.
+     */
     public async getByDownloadUrl(downloadUrl: string): Promise<Download> {
         try {
             const d = await Download.findOne({ where: { downloadUrl } });
@@ -145,7 +176,12 @@ class DownloadDao implements IDownloadDAO {
         }
     }
 
-    // Retrieve all downloads associated with a specific purchase ID
+    /**
+     * Function to retrieve all downloads associated with a specific purchase.
+     *
+     * @param purchaseId - The purchase ID used to retrieve downloads.
+     * @returns {Promise<Download[]>} - A promise resolving with an array of downloads.
+     */
     public async getAllByPurchase(purchaseId: number): Promise<Download[]> {
         try {
             return await Download.findAll({ where: { purchaseId } });
@@ -158,7 +194,14 @@ class DownloadDao implements IDownloadDAO {
         }
     }
 
-    //Update a download url
+    /**
+     * Function to update the download URL of a specific download.
+     *
+     * @param downloadId - The ID of the download to update.
+     * @param newDownloadUrl - The new URL to be set.
+     * @param options - Optional Sequelize transaction configuration.
+     * @returns {Promise<void>} - A promise that resolves when the update is completed.
+     */
     public async updateDownloadUrl(
         downloadId: number,
         newDownloadUrl: string,
