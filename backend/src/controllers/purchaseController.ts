@@ -12,6 +12,7 @@ import { DownloadService } from '../services/downloadService';
 import { generatePDF } from '../utils/pdf';
 import downloadRepository from '../repositories/downloadRepository';
 
+// Interface to define PurchaseResult to show to the client as response
 export interface IPurchaseResult {
     purchaseId: number;
     type: PurchaseType;

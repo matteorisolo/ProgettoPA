@@ -26,5 +26,6 @@ export const updateTokensValidate = [
         .isFloat({ min: 0 })
         .withMessage('Tokens must be a positive number.'),
 
+    // Use the centralized request validation middleware to handle any validation errors
     validateRequest,
 ];

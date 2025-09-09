@@ -18,5 +18,6 @@ export const downloadValidate = [
             `Format must be one of: ${Object.values(FormatType).join(', ')}`,
         ),
 
+    // Use the centralized request validation middleware to handle any validation errors
     validateRequest,
 ];

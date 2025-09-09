@@ -18,5 +18,6 @@ export const validateLogin = [
         .isLength({ min: 6 })
         .withMessage('Password must be at least 6 characters long.'),
 
+    // Use the centralized request validation middleware to handle any validation errors
     validateRequest,
 ];

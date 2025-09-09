@@ -8,6 +8,7 @@ import { HttpErrorFactory } from '../utils/errors/HttpErrorFactory';
 import { HttpError } from '../utils/errors/HttpError';
 import { HttpErrorCodes } from '../utils/errors/HttpErrorCodes';
 
+
 export interface IDownloadDAO extends DAO<IDownloadAttributes, number> {
     getByDownloadUrl(downloadUrl: string): Promise<Download>;
     getAllByPurchase(purchaseId: number): Promise<Download[]>;

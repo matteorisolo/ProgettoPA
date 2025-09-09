@@ -17,27 +17,27 @@ const router = Router();
 // Route for getting the token of the logged-in user
 router.get(
     '/users/me/tokens',
-    authMiddleware,
-    authorize([UserRole.USER]),
-    getMyTokens,
+    authMiddleware,                 // Middleware to authenticate the user
+    authorize([UserRole.USER]),     // Only authorized user
+    getMyTokens,                    // Controller
 );
 
 // Route for getting the token of a specific user by ID (admin only)
 router.get(
     '/users/:id/tokens',
-    authMiddleware,
-    authorize([UserRole.ADMIN]),
-    getUserCreditValidate,
-    getUserTokens,
+    authMiddleware,                 // Middleware to authenticate the user
+    authorize([UserRole.ADMIN]),    // Only admin
+    getUserCreditValidate,          // Validate parameters
+    getUserTokens,                  // Controller
 );
 
 // Route for updating the token of a specific user by ID (admin only)
 router.patch(
     '/users/:id/tokens',
-    authMiddleware,
-    authorize([UserRole.ADMIN]),
-    updateTokensValidate,
-    updateUserTokens,
+    authMiddleware,                 // Middleware to authenticate the user
+    authorize([UserRole.ADMIN]),    // Only admin
+    updateTokensValidate,           // Validate parameters
+    updateUserTokens,               // Controller
 );
 
 export default router;

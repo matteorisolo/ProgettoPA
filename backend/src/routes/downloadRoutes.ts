@@ -8,12 +8,13 @@ import { getDownload } from '../controllers/downloadController';
 // Define the router
 const router = Router();
 
+// Route to download a file purchased or a bundle
 router.get(
     '/downloads/:downloadUrl',
-    authMiddleware,
-    authorize([UserRole.USER]), // blocca gli admin
-    downloadValidate, // validator sul parametro
-    getDownload, // controller
+    authMiddleware,                 // Middleware to authenticate the user
+    authorize([UserRole.USER]),     // Only user are authorized
+    downloadValidate,               // Validate parameters
+    getDownload,                    // Controller to get a download
 );
 
 // Export the router

@@ -17,6 +17,7 @@ export const getDownload = async (
     next: NextFunction,
 ) => {
     try {
+        // Get req parameters and req queries
         const { downloadUrl } = req.params;
         const outputFormat = req.query.outputFormat as FormatType;
         const authUser = (req as RequestWithUser).user;
@@ -43,6 +44,7 @@ export const getDownload = async (
             );
         }
 
+        // Consistence check on purchases and products
         for (const d of downloads) {
             const purchaseDetail = await purchaseRepository.getDetailsById(
                 d.purchaseId,

@@ -22,7 +22,7 @@ export class AuthService {
         email: string,
         password: string,
     ): Promise<IAuthLoginResult> {
-        // 1) Fetch user by email via DAO
+        // Fetch user by email via DAO
         const user = await userDao.getByEmail(email);
 
         // In case the DAO version returns `null` instead of throwing for not found.
@@ -33,7 +33,7 @@ export class AuthService {
             );
         }
 
-        // 2) Verify the password using bcrypt (DB must store hashed passwords).
+        // Verify the password using bcrypt (DB must store hashed passwords).
         const isPasswordValid = await bcrypt.compare(password, user.password);
         if (!isPasswordValid) {
             throw HttpErrorFactory.createError(
@@ -42,10 +42,10 @@ export class AuthService {
             );
         }
 
-        // 3) Sign the JWT.
+        // Sign the JWT.
         const token = generateToken({ id: user.idUser, role: user.role });
 
-        // 4) Build the response DTO without password or other sensitive fields.
+        // Build the response DTO without password or other sensitive fields.
         const result: IAuthLoginResult = {
             token,
             user: {
