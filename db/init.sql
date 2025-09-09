@@ -102,7 +102,7 @@ INSERT INTO products (title, type, year, format, cost, path) VALUES
 ('Restoration Video', 'historical_video', 1900, 'mp4', 8, '/usr/src/app/uploads/restoration1900.mp4'),
 ('Old Photograph', 'photograph', 1925, 'jpg', 4, '/usr/src/app/uploads/photo1925.jpg'),
 ('Historic Newspaper', 'newspaper', 1912, 'png', 6, '/usr/src/app/uploads/newspaper1912.png'),
-('World Map of 1492 High Resolution', 'historical_cartography', 1492, 'jpg', 25, '/usr/src/app/uploads/world_map_1492.jpg');
+('World Map of 1492 High Resolution', 'historical_cartography', 1492, 'jpg', 110, '/usr/src/app/uploads/world_map_1492.jpg');
 
 
 -- PURCHASES seed
