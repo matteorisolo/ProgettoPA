@@ -1707,7 +1707,7 @@
 								"exec": [
 									"let res = pm.response.json();\r",
 									"if (res.downloadUrl) {\r",
-									"    pm.collectionVariables.set(\"downloadUrlStandard\", res.downloadUrl);\r",
+									"    pm.collectionVariables.set(\"downloadUrlStandardMp4\", res.downloadUrl);\r",
 									"}"
 								],
 								"type": "text/javascript",
@@ -3520,7 +3520,7 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "http://localhost:3000/downloads/{{downloadUrlStandard}}?outputFormat=png",
+							"raw": "http://localhost:3000/downloads/{{downloadUrlAdditional}}?outputFormat=png",
 							"protocol": "http",
 							"host": [
 								"localhost"
@@ -3528,7 +3528,7 @@
 							"port": "3000",
 							"path": [
 								"downloads",
-								"{{downloadUrlStandard}}"
+								"{{downloadUrlAdditional}}"
 							],
 							"query": [
 								{
