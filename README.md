@@ -57,7 +57,7 @@ cd ProgettoPA
 docker-compose up --build
 ```
 
-Una volta avviato, il sistema sarà disponibile all'indirizzo: http://127.0.0.1:3000. Le rotte API possono essere testate utilizzando Postman con la collection fornita nella repository.
+Una volta avviato, il sistema sarà disponibile all'indirizzo: http://127.0.0.1:3000. Le rotte API possono essere testate utilizzando Postman con la collection fornita nella repository. Va sottolineato che, dal momento che alcune rotte richiedono il caricamento di un file immagine (quelle per il caricamento dei prodotti), le immagini possono essere trovate in questa repo, in `product_images`. Vanno quindi caricate manualmente su Postman.
 
 ---
 
