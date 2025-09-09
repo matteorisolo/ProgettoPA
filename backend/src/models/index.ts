@@ -27,18 +27,18 @@ Download.belongsTo(Purchase, { foreignKey: 'purchaseId', as: 'purchase' });
 
 // Export the database object containing Sequelize instance and models
 const db = {
-  sequelize,
-  AppUser,
-  Product,
-  Purchase,
-  Download,
+    sequelize,
+    AppUser,
+    Product,
+    Purchase,
+    Download,
 };
 
 // Function to initialize and sync all models with the database
 export const initModels = async () => {
-  // Sync all defined models to the DB and apply any necessary alterations
-  await sequelize.sync({ alter: true });
-  console.log('Database synchronized successfully.');
+    // Sync all defined models to the DB and apply any necessary alterations
+    await sequelize.sync({ alter: true });
+    console.log('Database synchronized successfully.');
 };
 
 // Export the db object

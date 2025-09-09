@@ -12,18 +12,18 @@ const router = Router();
 
 // Route for uploading a new product (requires admin role)
 router.post(
-  '/products',
-  authMiddleware, // Middleware to authenticate the user
-  authorize([UserRole.ADMIN]), // Only admins can upload products
-  uploadProduct.single('file'), // Middleware to handle file upload
-  createProductValidate, // Middleware to validate product data
-  createProduct, // Controller to handle product creation
+    '/products',
+    authMiddleware, // Middleware to authenticate the user
+    authorize([UserRole.ADMIN]), // Only admins can upload products
+    uploadProduct.single('file'), // Middleware to handle file upload
+    createProductValidate, // Middleware to validate product data
+    createProduct, // Controller to handle product creation
 );
 
 router.get(
-  '/products',
-  getProductsValidate, // Middleware to validate query parameters
-  getProducts, // Controller to handle getting products
+    '/products',
+    getProductsValidate, // Middleware to validate query parameters
+    getProducts, // Controller to handle getting products
 );
 
 // Export the router

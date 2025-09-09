@@ -9,11 +9,11 @@ import { getDownload } from '../controllers/downloadController';
 const router = Router();
 
 router.get(
-  '/downloads/:downloadUrl',
-  authMiddleware,
-  authorize([UserRole.USER]), // blocca gli admin
-  downloadValidate, // validator sul parametro
-  getDownload, // controller
+    '/downloads/:downloadUrl',
+    authMiddleware,
+    authorize([UserRole.USER]), // blocca gli admin
+    downloadValidate, // validator sul parametro
+    getDownload, // controller
 );
 
 // Export the router
