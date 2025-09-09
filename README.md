@@ -13,7 +13,6 @@
     - [📐 Pattern Utilizzati](#pattern-utilizzati)
     - [↔️ Diagrammi delle sequenze](#diagrammi-delle-sequenze)
 - [🌐 Rotte API](#rotte-api)
-- [📝 Scelte implementative](#scelte-implementative)
 - [🛠️ Strumenti utilizzati](#strumenti-utilizzati)
 - [👨‍💻 Autori](#autori)
 
@@ -1627,7 +1626,7 @@ Authorization: No Auth
 *Richiesta Body/Query*
 
 ```bash
-Authorization: Bearer {authToken}
+Authorization: Bearer {userBuyerToken}
 ```
 ```json
 {
@@ -1655,7 +1654,7 @@ Authorization: Bearer {authToken}
 *Richiesta Body/Query*
 
 ```bash
-Authorization: Bearer {authToken}
+Authorization: Bearer {userBuyerToken}
 ```
 ```json
 {
@@ -1685,7 +1684,7 @@ Authorization: Bearer {authToken}
 *Richiesta Body/Query*
 
 ```bash
-Authorization: Bearer {authToken}
+Authorization: Bearer {userBuyerToken}
 ```
 ```json
 {
@@ -1718,7 +1717,7 @@ Authorization: Bearer {authToken}
 *Richiesta Body/Query*
 
 ```bash
-Authorization: Bearer {authToken}
+Authorization: Bearer {userBuyerToken}
 ```
 
 *Risposta:*
@@ -1760,7 +1759,7 @@ Authorization: Bearer {authToken}
 *Richiesta Body/Query*
 
 ```bash
-Authorization: Bearer {authToken}
+Authorization: Bearer {userBuyerToken}
 ```
 
 *Risposta:*
@@ -1774,7 +1773,7 @@ Authorization: Bearer {authToken}
 
 *Richiesta Body/Query*
 ```bash
-Authorization: Bearer {authToken}
+Authorization: Bearer {userBuyerToken}
 ```
 
 *Risposta*
@@ -1811,7 +1810,7 @@ Authorization: Bearer {adminToken}
 
 *Richiesta Body/Query*
 ```bash
-Authorization: Bearer {authToken}
+Authorization: Bearer {userBuyerToken}
 ```
 
 *Risposta*
@@ -1823,7 +1822,7 @@ Authorization: Bearer {authToken}
 
 *Richiesta Body/Query*
 ```bash
-Authorization: Bearer {authToken}
+Authorization: Bearer {userBuyerToken}
 ```
 
 *Risposta*
@@ -1835,7 +1834,7 @@ Authorization: Bearer {authToken}
 
 *Richiesta Body/Query*
 ```bash
-Authorization: Bearer {authToken}
+Authorization: Bearer {userBuyerToken}
 ```
 
 *Risposta*
@@ -1846,7 +1845,7 @@ Authorization: Bearer {authToken}
 - `GET /downloads/{{downloadUrlGift}}` – Rotta che permette di ricevere correttamente il prodotto ricevuto in regalo traamite l'url ottenuto 
 *Richiesta Body/Query*
 ```bash
-Authorization: Bearer {reciverToken}
+Authorization: Bearer {userRecipientToken}
 ```
 
 *Risposta*
@@ -1857,7 +1856,7 @@ Authorization: Bearer {reciverToken}
 - `GET /downloads/{{downloadUrlMultipleStandard}}` – Rotta che permette di ricevere correttamente i prodotti acquistati in un file .zip tramite l'url ottenuto
 *Richiesta Body/Query*
 ```bash
-Authorization: Bearer {authToken}
+Authorization: Bearer {userBuyerToken}
 ```
 
 *Risposta*
@@ -1866,12 +1865,6 @@ Authorization: Bearer {authToken}
 </p>
 
 ---
-
-## Scelte implementative
-
-
----
-
 
 ## Strumenti utilizzati
 

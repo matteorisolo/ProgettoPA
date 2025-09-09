@@ -301,4 +301,3 @@ class PurchaseDao implements IPurchaseDAO {
 }
 
 export default new PurchaseDao();
-

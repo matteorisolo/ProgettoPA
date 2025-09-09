@@ -73,25 +73,25 @@ INSERT INTO users (first_name, last_name, email, password, role, tokens) VALUES
 INSERT INTO users (first_name, last_name, email, password, role, tokens) VALUES
 ('Mario', 'Rossi', 'mario.rossi@example.com',
 '$2a$10$6FKB6rRyhUY71RWUn5/55Od7X2GwmAvtXkA58Y4fY/Pn6uZe0bK3.',  
-'user', 20);
+'user', 100);
 
 -- Luigi Bianchi / password: luigi123
 INSERT INTO users (first_name, last_name, email, password, role, tokens) VALUES
 ('Luigi', 'Bianchi', 'luigi.bianchi@example.com',
 '$2a$10$WXl9OlCrZMjiLS2luhdad.gO2Rn4JvNtBop1pnoDFvCfN5fNhR6Yy',  
-'user', 20);
+'user', 100);
 
 -- Anna Verdi / password: anna123
 INSERT INTO users (first_name, last_name, email, password, role, tokens) VALUES
 ('Anna', 'Verdi', 'anna.verdi@example.com',
 '$2a$10$YrUW9iAuZP/MHAu3sRla5uUrH8SX00.Tl.R9HAJQ/ek8ddaxpj1wu',  
-'user', 20);
+'user', 100);
 
 -- Paolo Neri / password: paolo123
 INSERT INTO users (first_name, last_name, email, password, role, tokens) VALUES
 ('Paolo', 'Neri', 'paolo.neri@example.com',
 '$2a$10$ICNU23xHtYIPGfbagEWbhu9VdlU1IljW/b2Asockpb7qrNL.Zkur6', 
-'user', 20);
+'user', 100);
 
 
 -- PRODUCTS seed

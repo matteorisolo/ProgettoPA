@@ -415,9 +415,12 @@ export class DownloadService {
                         transaction: t,
                     });
                 } else {
-                    await downloadRepository.setUsedRecipientByUrl(downloadUrl, {
-                        transaction: t,
-                    });
+                    await downloadRepository.setUsedRecipientByUrl(
+                        downloadUrl,
+                        {
+                            transaction: t,
+                        },
+                    );
                 }
             });
 
