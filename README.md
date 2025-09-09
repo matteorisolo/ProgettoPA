@@ -1075,7 +1075,7 @@ sequenceDiagram
 
 ```
 
-#### `GET /purchases` per los storico acquisti
+#### `GET /purchases` per lo storico acquisti
 
 Il diagramma illustra il flusso con cui un utente autenticato recupera lo storico dei propri acquisti, scegliendo il formato di output (JSON o PDF).
 
